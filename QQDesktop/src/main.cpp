@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 	QApplication a(argc, argv);
 	ElaApplication::getInstance()->setWindowIcon(QIcon(""));
 	ElaApplication::getInstance()->init();
-	QQChatAudioView w;
+	QQDesktop w;
 	w.show();
 	return a.exec();
 }

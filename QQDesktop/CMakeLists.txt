@@ -26,30 +26,11 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(
-  QT NAMES Qt6 Qt5 REQUIRED
-  COMPONENTS Widgets
-             Core
-             Gui
-             Network
-             Multimedia
-             Concurrent
-             PrintSupport
-             OpenGl)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Core Gui Network
+                                                  Multimedia Concurrent)
 
-find_package(
-  Qt${QT_VERSION_MAJOR} REQUIRED
-  COMPONENTS Widgets
-             Core
-             Gui
-             Network
-             Multimedia
-             Concurrent
-             PrintSupport
-             OpenGL)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-                      "E:/vcpkg/installed/x64-windows/share/ffmpeg")
-find_package(FFMPEG REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Core Gui Network
+                                                       Multimedia Concurrent)
 find_package(FFTW3 CONFIG REQUIRED)
 
 set(UI_DIR ./resource)
@@ -87,7 +68,6 @@ else()
   endif()
 endif()
 target_compile_options(${PROJECT_NAME} PRIVATE -w)
-target_compile_definitions(${PROJECT_NAME} PRIVATE QCUSTOMPLOT_USE_OPENGL)
 # 链接调试或发布库
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_link_libraries(${PROJECT_NAME} PRIVATE elawidgettoolsd vld)
@@ -95,22 +75,14 @@ else()
   target_link_libraries(${PROJECT_NAME} PRIVATE elawidgettools)
 endif()
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_INCLUDE_DIRS})
-target_link_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARY_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PRIVATE FFTW3::fftw3)
 
 # 链接 Qt 库
 target_link_libraries(
   ${PROJECT_NAME}
-  PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
-          Qt${QT_VERSION_MAJOR}::Core
-          Qt${QT_VERSION_MAJOR}::Gui
-          Qt${QT_VERSION_MAJOR}::Network
-          Qt${QT_VERSION_MAJOR}::Multimedia
-          Qt${QT_VERSION_MAJOR}::Concurrent
-          Qt${QT_VERSION_MAJOR}::PrintSupport
-          Qt${QT_VERSION_MAJOR}::OpenGL)
+  PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Core
+          Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Network
+          Qt${QT_VERSION_MAJOR}::Multimedia Qt${QT_VERSION_MAJOR}::Concurrent)
 
 include(GNUInstallDirs)
 install(

@@ -1,29 +1,38 @@
 ﻿#include "QQChatAudioView.h"
 
 QQChatAudioView::QQChatAudioView(QWidget *parent)
-	: QDialog(parent)
+	: QWidget(parent)
 {
 	m_inputCache.resize(2 * MAX_UI_DATA_SIZE, 0);
 	m_outputCache.resize(MAX_UI_DATA_SIZE + 1, 0);
 	m_plan = fftw_plan_dft_r2c_1d(m_inputCache.size(), m_inputCache.data(), reinterpret_cast<fftw_complex *>(m_outputCache.data()), FFTW_ESTIMATE);
 	m_showData.resize(MAX_UI_DATA_SIZE, 0);
 
-	m_format.setSampleRate(44100);
-	m_format.setChannelCount(1);
-	m_format.setSampleSize(16);
-	m_format.setCodec("audio/pcm");
-	m_format.setByteOrder(QAudioFormat::LittleEndian);
-	m_format.setSampleType(QAudioFormat::SignedInt);
-
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+	m_deviceInfo = QMediaDevices::defaultAudioInput();
+	m_format.setSampleFormat(QAudioFormat::Int16); // 默认使用16位bit深度
+	if (!m_deviceInfo.isFormatSupported(m_format))
+	{
+		m_format = nearestFormat(m_deviceInfo, m_format);
+	}
+	m_audioInput = new QAudioSource(m_deviceInfo, m_format, this);
+	m_audioInput->setBufferSize(10 * 1024);
+#else
 	m_deviceInfo = QAudioDeviceInfo::defaultInputDevice();
+	m_format.setSampleRate(44100);					   // 默认使用44100采样率
+	m_format.setChannelCount(1);					   // 默认使用单声道
+	m_format.setSampleSize(16);						   // 默认使用16位bit深度
+	m_format.setByteOrder(QAudioFormat::LittleEndian); // 默认使用小端字节序
+	m_format.setSampleType(QAudioFormat::SignedInt);   // 默认使用有符号整型
 	if (!m_deviceInfo.isFormatSupported(m_format))
 	{
 		m_format = m_deviceInfo.nearestFormat(m_format);
 	}
-
 	m_audioInput = new QAudioInput(m_deviceInfo, m_format, this);
-
-	connect(m_audioDevice, &QIODevice::readyRead, this, &QQChatAudioView::do_audioBufferReady);
+	m_audioInput->setBufferSize(10 * 1024);
+	m_audioInput->setNotifyInterval(60);
+	connect(m_audioInput, &QAudioInput::notify, this, &QQChatAudioView::do_audioBufferReady);
+#endif
 }
 
 QQChatAudioView::~QQChatAudioView()
@@ -33,30 +42,55 @@ QQChatAudioView::~QQChatAudioView()
 
 void QQChatAudioView::keyPressEvent(QKeyEvent *event)
 {
-	if (event->key() == Qt::Key_Escape)
+	if (event->key() == Qt::Key_Space)
 	{
-		m_audioDevice = m_audioInput->start();
+		if (!event->isAutoRepeat() && m_audioInput->state() == QAudio::StoppedState)
+		{
+			m_audioData.clear();
+			m_audioDevice = m_audioInput->start();
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+			connect(m_audioDevice, &QIODevice::readyRead, this, &QQChatAudioView::do_audioBufferReady);
+#endif
+		}
 	}
-	return QDialog::keyPressEvent(event);
+	return QWidget::keyPressEvent(event);
 }
 
 void QQChatAudioView::keyReleaseEvent(QKeyEvent *event)
 {
-	if (event->key() == Qt::Key_Escape)
+	if (event->key() == Qt::Key_Space)
 	{
-		m_audioInput->stop();
-		QByteArray amrData = getAuioPCMToAMR(m_audioData);
-		if (!amrData.isEmpty())
+		if (!event->isAutoRepeat() && m_audioInput->state() == QAudio::ActiveState)
 		{
-			QFile file("audio.amr");
-			if (file.open(QIODevice::WriteOnly))
+			m_audioInput->stop();
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+			disconnect(m_audioDevice, &QIODevice::readyRead, this, &QQChatAudioView::do_audioBufferReady);
+#endif
+			std::fill(m_showData.begin(), m_showData.end(), 0);
+			this->update();
+			QByteArray amrData = getAuioPCMToAMR(m_audioData);
+			uint64_t duration = calculateAMRDuration(amrData);
+			if (duration < m_min || duration > m_max)
 			{
-				file.write(amrData);
-				file.close();
+				emit sign_overTheLimit(duration);
 			}
+			else if (!amrData.isEmpty())
+			{
+				QFile file(m_fileName);
+				if (file.open(QIODevice::WriteOnly))
+				{
+					file.write(amrData);
+					file.close();
+				}
+			}
+			m_audioData.clear();
 		}
 	}
-	return QDialog::keyReleaseEvent(event);
+	else if (event->key() == Qt::Key_Escape)
+	{
+		emit sign_exit();
+	}
+	return QWidget::keyReleaseEvent(event);
 }
 
 void QQChatAudioView::paintEvent(QPaintEvent *event)
@@ -66,28 +100,55 @@ void QQChatAudioView::paintEvent(QPaintEvent *event)
 	painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
 	painter.fillRect(this->rect(), QColor("#F2F2F2"));
 	int radius = 50;
-	painter.setBrush(QColor("#00A5FF"));
 	QRect ellipseRect = QRect(this->width() / 2 - radius, this->height() / 2 - radius, 2 * radius, 2 * radius);
 	// 绘制频域分析数据
 	double step = 2 * M_PI * radius / m_showData.size();
 	double angle = 360.0 / m_showData.size();
 	QPoint basePoint = QPoint(ellipseRect.x() + radius, ellipseRect.y() + radius);
+	// 绘制基础频域数据指示器
+
+	painter.save();
+	QTransform transform;
+	transform.translate(basePoint.x(), basePoint.y());
+	painter.setTransform(transform);
 	for (int i = 0; i < m_showData.size(); i++)
 	{
 		double value = m_showData.at(i);
-		QPoint start = QPoint(basePoint.x() + radius * sin(i * angle), basePoint.y() - radius * cos(i * angle));
-		QPoint end = QPoint(basePoint.x() + (radius + value) * sin(i * angle), basePoint.y() - (radius + value) * cos(i * angle));
-		QLinearGradient linearGradient(0, 0, width(), 0);
-		linearGradient.setColorAt(0.5, Qt::black);
-		linearGradient.setColorAt(1, Qt::green);
-		painter.setPen(QPen(linearGradient, step));
-		painter.drawLine(start, end);
+		QPixmap baseIndicatorPixmap(step, radius + value + step / 2 - 5);
+		baseIndicatorPixmap.fill(Qt::transparent);
+		QPainter baseIndicatorPixmapPainter(&baseIndicatorPixmap);
+		baseIndicatorPixmapPainter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+		baseIndicatorPixmapPainter.setPen(Qt::NoPen);
+		baseIndicatorPixmapPainter.setBrush(Qt::blue);
+		QPainterPath path;
+		path.moveTo(0, 0);
+		path.lineTo(0, baseIndicatorPixmap.height() - step / 2);
+		path.arcTo(QRectF(0, baseIndicatorPixmap.height() - step, step, step), 180, 180);
+		path.lineTo(step, 0);
+		path.closeSubpath();
+		baseIndicatorPixmapPainter.fillPath(path, Qt::blue);
+
+		transform.rotate(angle);
+		painter.setTransform(transform);
+		painter.drawPixmap(QPoint(-step / 2, 0), baseIndicatorPixmap);
 	}
+	painter.restore();
+
 	// 绘制中心圆
+	painter.setBrush(QColor("#00A5FF"));
 	painter.drawEllipse(ellipseRect);
 	// 绘制中心圆内部的图标
 	QPixmap pixmap = ElaIcon::getInstance()->getElaIcon(ElaIconType::Microphone, radius, Qt::white).pixmap(radius, radius);
 	painter.drawPixmap(ellipseRect.x() + ellipseRect.width() / 2 - pixmap.size().width() / 2, ellipseRect.y() + ellipseRect.height() / 2 - pixmap.size().height() / 2, pixmap);
+	if (m_audioInput->state() == QAudio::StoppedState)
+	{
+		painter.setPen(Qt::black);
+		painter.setFont(QFont("Microsoft YaHei", 10));
+		QString text = QString::fromLocal8Bit("按住空格键说话,松开发送,按下Esc键退出");
+		QRect rect = getCalculateTextRects(text, painter.font());
+		rect.moveTopLeft(QPoint(this->width() / 2 - rect.width() / 2, this->height() / 2 + radius + 10));
+		painter.drawText(rect, Qt::AlignCenter, text);
+	}
 }
 
 void QQChatAudioView::frequencyDomainByFFTW()
@@ -114,14 +175,17 @@ void QQChatAudioView::frequencyDomainByFFTW()
 
 QByteArray QQChatAudioView::getAuioPCMToAMR(const QByteArray &data)
 {
+#ifdef Q_USE_FFMPEG
 	AVCodec *codec = const_cast<AVCodec *>(avcodec_find_encoder(AV_CODEC_ID_AMR_NB)); // 查找amr编码器
 	if (codec == nullptr)
 	{
+		qWarning() << "Can't find amr codec";
 		return QByteArray();
 	}
 	AVCodecContext *codecContext = avcodec_alloc_context3(codec);
 	if (codecContext == nullptr)
 	{
+		qWarning() << "Can't alloc amr codec context";
 		return QByteArray();
 	}
 	// arm_nb的编码器参数设置
@@ -133,6 +197,7 @@ QByteArray QQChatAudioView::getAuioPCMToAMR(const QByteArray &data)
 
 	if (avcodec_open2(codecContext, codec, nullptr) < 0)
 	{
+		qWarning() << "Can't open amr codec";
 		avcodec_free_context(&codecContext);
 		return QByteArray();
 	}
@@ -144,6 +209,7 @@ QByteArray QQChatAudioView::getAuioPCMToAMR(const QByteArray &data)
 
 	if (avio_open_dyn_buf(&ioContext) < 0)
 	{
+		qWarning() << "Can't open dynamic buffer";
 		avcodec_free_context(&codecContext);
 		return QByteArray();
 	}
@@ -151,6 +217,7 @@ QByteArray QQChatAudioView::getAuioPCMToAMR(const QByteArray &data)
 	AVFormatContext *formatContext = avformat_alloc_context();
 	if (formatContext == nullptr)
 	{
+		qWarning() << "Can't alloc format context";
 		avio_close_dyn_buf(ioContext, &buffer);
 		avcodec_free_context(&codecContext);
 		return QByteArray();
@@ -160,6 +227,7 @@ QByteArray QQChatAudioView::getAuioPCMToAMR(const QByteArray &data)
 	AVStream *stream = avformat_new_stream(formatContext, codec);
 	if (stream == nullptr)
 	{
+		qWarning() << "Can't create audio stream";
 		avio_close_dyn_buf(ioContext, &buffer);
 		avcodec_free_context(&codecContext);
 		avformat_free_context(formatContext);
@@ -178,6 +246,7 @@ QByteArray QQChatAudioView::getAuioPCMToAMR(const QByteArray &data)
 	// 写入头部信息
 	if (avformat_write_header(formatContext, nullptr) < 0)
 	{
+		qWarning() << "Can't write header";
 		avio_close_dyn_buf(ioContext, &buffer);
 		avcodec_free_context(&codecContext);
 		avformat_free_context(formatContext);
@@ -192,6 +261,7 @@ QByteArray QQChatAudioView::getAuioPCMToAMR(const QByteArray &data)
 	AVFrame *frame = av_frame_alloc();
 	if (frame == nullptr)
 	{
+		qWarning() << "Can't alloc frame";
 		avio_close_dyn_buf(ioContext, &buffer);
 		avcodec_free_context(&codecContext);
 		avformat_free_context(formatContext);
@@ -254,23 +324,237 @@ QByteArray QQChatAudioView::getAuioPCMToAMR(const QByteArray &data)
 	avformat_free_context(formatContext);
 
 	return amrBuffer;
+#else
+	QTemporaryFile tempFile;
+	tempFile.setAutoRemove(true);
+	if (!tempFile.open())
+	{
+		qWarning() << "Can't open temp file";
+		return QByteArray();
+	}
+	tempFile.close();
+	QProcess process;
+	process.setStandardOutputFile(tempFile.fileName());
+	QStringList arguments;
+	arguments << "-f" << QString("s%1le").arg(8 * m_format.bytesPerFrame())
+			  << "-ar" << QString::number(m_format.sampleRate())
+			  << "-ac" << QString::number(m_format.channelCount())
+			  << "-i" << "-"
+			  << "-ar" << "8000"
+			  << "-ac" << QString::number(m_format.channelCount())
+			  << "-f" << "amr" << "-";
+	process.start("ffmpeg", arguments);
+	if (!process.waitForStarted())
+	{
+		qWarning() << "FFmpeg process failed to start";
+		return QByteArray();
+	}
+	process.write(data);
+	process.closeWriteChannel();
+	if (!process.waitForFinished())
+	{
+		qWarning() << "FFmpeg process failed to finish";
+		return QByteArray();
+	}
+	if (!tempFile.open())
+	{
+		qWarning() << "Can't open temp file";
+		return QByteArray();
+	}
+	QByteArray amrData = tempFile.readAll();
+	tempFile.close();
+	return amrData;
+#endif
 }
+
+uint64_t QQChatAudioView::calculateAMRDuration(const QByteArray &data)
+{
+	const int amrNBFrameSizes[] = {13, 14, 16, 18, 20, 21, 27, 32};
+	const QByteArray header = "#!AMR\n";
+	if (!data.startsWith(header))
+	{
+		qWarning() << "Invalid AMR file";
+		return -1.0;
+	}
+	int offset = header.size(); // 去除头部
+	int total = 0;
+	while (offset < data.size())
+	{
+		unsigned char frameHeader = static_cast<unsigned char>(data[offset]);
+		int frameType = (frameHeader >> 3) & 0x0F;
+		if (frameType >= 0 && frameType < 8)
+		{
+			int frameSize = amrNBFrameSizes[frameType];
+			offset += frameSize;
+			total++;
+		}
+		else
+		{
+			qWarning() << "Unknown AMR frame type";
+			return -1.0;
+		}
+	}
+	return 20 * total / 1000;
+}
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+QAudioFormat QQChatAudioView::nearestFormat(const QAudioDevice &device, const QAudioFormat &format)
+{
+	QAudioFormat nearestFormat;
+	for (auto sampleFormat : device.supportedSampleFormats())
+	{
+		if (sampleFormat == QAudioFormat::Unknown)
+		{
+			continue;
+		}
+		else if (sampleFormat == QAudioFormat::Float)
+		{
+			nearestFormat.setSampleFormat(QAudioFormat::Float);
+		}
+		else if (sampleFormat == QAudioFormat::Int32)
+		{
+			nearestFormat.setSampleFormat(QAudioFormat::Int32);
+		}
+		else if (sampleFormat == QAudioFormat::Int16)
+		{
+			nearestFormat.setSampleFormat(QAudioFormat::Int16);
+		}
+		else if (sampleFormat == QAudioFormat::UInt8)
+		{
+			nearestFormat.setSampleFormat(QAudioFormat::UInt8);
+		}
+	}
+	return nearestFormat;
+}
+#endif
 
 void QQChatAudioView::do_audioBufferReady()
 {
 	QByteArray data = m_audioDevice->readAll();
 	m_audioData.append(data);
 	std::fill(m_inputCache.begin(), m_inputCache.end(), 0);
-	int sampleCount = data.size() / sizeof(int16_t);
-	for (int i = 0; i < m_inputCache.size(); ++i)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+	switch (m_format.sampleFormat())
 	{
-		if (i >= sampleCount)
+	case QAudioFormat::UInt8:
+	{
+		int sampleCount = data.size();
+		for (int i = 0; i < m_inputCache.size(); ++i)
 		{
-			frequencyDomainByFFTW();
-			return;
+			if (i >= sampleCount)
+			{
+				frequencyDomainByFFTW();
+				return;
+			}
+			uint8_t sample = static_cast<uint8_t>(data[i]);
+			m_inputCache[i] = sample;
 		}
-		int16_t sample = static_cast<int16_t>((data[2 * i + 1] << 8) | (data[2 * i] & 0xFF));
-		m_inputCache[i] = sample;
+		break;
 	}
+	case QAudioFormat::Int16:
+	{
+		int sampleCount = data.size() / sizeof(int16_t);
+		for (int i = 0; i < m_inputCache.size(); ++i)
+		{
+			if (i >= sampleCount)
+			{
+				frequencyDomainByFFTW();
+				return;
+			}
+			int16_t sample = *reinterpret_cast<const int16_t *>(data.data() + 2 * i);
+			m_inputCache[i] = sample;
+		}
+		break;
+	}
+	case QAudioFormat::Int32:
+	{
+		int sampleCount = data.size() / sizeof(int32_t);
+		for (int i = 0; i < m_inputCache.size(); ++i)
+		{
+			if (i >= sampleCount)
+			{
+				frequencyDomainByFFTW();
+				return;
+			}
+			int32_t sample = *reinterpret_cast<const int32_t *>(data.data() + 4 * i);
+			m_inputCache[i] = sample;
+		}
+		break;
+	}
+	case QAudioFormat::Float:
+	{
+		int sampleCount = data.size() / sizeof(float);
+		for (int i = 0; i < m_inputCache.size(); ++i)
+		{
+			if (i >= sampleCount)
+			{
+				frequencyDomainByFFTW();
+				return;
+			}
+			float sample = *reinterpret_cast<const float *>(data.data() + 4 * i);
+			m_inputCache[i] = sample;
+		}
+		break;
+	}
+	default:
+		return;
+	}
+#else
+	if (m_format.sampleType() != QAudioFormat::SignedInt)
+	{
+		return;
+	}
+	switch (m_format.sampleSize())
+	{
+	case 8:
+	{
+		int sampleCount = data.size();
+		for (int i = 0; i < m_inputCache.size(); ++i)
+		{
+			if (i >= sampleCount)
+			{
+				frequencyDomainByFFTW();
+				return;
+			}
+			int8_t sample = static_cast<int8_t>(data[i]);
+			m_inputCache[i] = sample;
+		}
+		break;
+	}
+	case 16:
+	{
+		int sampleCount = data.size() / sizeof(int16_t);
+		for (int i = 0; i < m_inputCache.size(); ++i)
+		{
+			if (i >= sampleCount)
+			{
+				frequencyDomainByFFTW();
+				return;
+			}
+			int16_t sample = *reinterpret_cast<const int16_t *>(data.data() + 2 * i);
+			m_inputCache[i] = sample;
+		}
+		break;
+	}
+	case 32:
+	{
+		int sampleCount = data.size() / sizeof(int32_t);
+		for (int i = 0; i < m_inputCache.size(); ++i)
+		{
+			if (i >= sampleCount)
+			{
+				frequencyDomainByFFTW();
+				return;
+			}
+			int32_t sample = *reinterpret_cast<const int32_t *>(data.data() + 4 * i);
+			m_inputCache[i] = sample;
+		}
+		break;
+	}
+
+	default:
+		break;
+	}
+#endif
 	frequencyDomainByFFTW();
 }

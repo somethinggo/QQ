@@ -401,6 +401,8 @@ void QQDesktop::connectInit()
 	connect(ui->main_chatTab_chatStack_NotNULL_inputGroup_audioBtn, &QPushButton::clicked, this, &QQDesktop::do_chat_userClickSendAudioButton);			// chat界面 点击发送语音按钮
 	connect(ui->main_chatTab_chatStack_NotNULL_inputGroup_clearBtn, &QPushButton::clicked, this, &QQDesktop::do_chat_userClickClearInputButton);		// chat界面 点击清空输入按钮
 	connect(ui->main_chatTab_chatStack_NotNULL_inputGroup_sendBtn, &QPushButton::clicked, this, &QQDesktop::do_chat_userClickSendMessageButton);		// chat界面 点击发送消息按钮
+	connect(ui->main_chatTab_chatStack_NotNULL_inputMusic, &QQChatAudioView::sign_overTheLimit, this, &QQDesktop::do_chat_userAudioDataOverTheLimit);	// chat界面 语音数据超过限制
+	connect(ui->main_chatTab_chatStack_NotNULL_inputMusic, &QQChatAudioView::sign_exit, this, &QQDesktop::do_chat_userClickEscInAudioView);				// chat界面 语音界面退出
 	// friend connect
 	connect(ui->main_friendAndGroupTab_searchMoreBtn, &QPushButton::clicked, this, &QQDesktop::do_userClickSearchMoreButton);												  // friend界面 搜索更多按钮
 	connect(ui->main_friendAndGroupTab_friendNoticeButton, &QPushButton::clicked, this, &QQDesktop::do_friend_userClickNoticeButton);										  // friend界面 好友通知按钮
@@ -518,21 +520,25 @@ bool QQDesktop::eventFilter(QObject *watch, QEvent *event)
 				int nextIndex = ui->main_chatTab_chatStack->currentIndex();
 				if (nextIndex == 1)
 				{
-					QPoint main_chatTab_chatStack_NotNULL_textInput_point = ui->main_chatTab_chatStack_NotNULL_textInput->mapToGlobal(QPoint(0, 0));
-					QRect main_chatTab_chatStack_NotNULL_textInput_rect(main_chatTab_chatStack_NotNULL_textInput_point, ui->main_chatTab_chatStack_NotNULL_textInput->size());
-					if (main_chatTab_chatStack_NotNULL_textInput_rect.contains(pos))
+					int nextNextIndex = ui->main_chatTab_chatStack_NotNULL_inputStack->currentIndex();
+					if (nextNextIndex == 0)
 					{
-						ui->main_chatTab_chatStack_NotNULL_textInput->setFocus();
-					}
-					else
-					{
-						ui->main_chatTab_chatStack_NotNULL_textInput->clearFocus();
-					}
-					QPoint emotionView_point = QQChatEmojiView::getInstance()->mapToGlobal(QPoint(0, 0));
-					QRect emotionView_rect(emotionView_point, QQChatEmojiView::getInstance()->size());
-					if (!emotionView_rect.contains(pos))
-					{
-						QQChatEmojiView::getInstance()->hide();
+						QPoint main_chatTab_chatStack_NotNULL_textInput_point = ui->main_chatTab_chatStack_NotNULL_textInput->mapToGlobal(QPoint(0, 0));
+						QRect main_chatTab_chatStack_NotNULL_textInput_rect(main_chatTab_chatStack_NotNULL_textInput_point, ui->main_chatTab_chatStack_NotNULL_textInput->size());
+						if (main_chatTab_chatStack_NotNULL_textInput_rect.contains(pos))
+						{
+							ui->main_chatTab_chatStack_NotNULL_textInput->setFocus();
+						}
+						else
+						{
+							ui->main_chatTab_chatStack_NotNULL_textInput->clearFocus();
+						}
+						QPoint emotionView_point = QQChatEmojiView::getInstance()->mapToGlobal(QPoint(0, 0));
+						QRect emotionView_rect(emotionView_point, QQChatEmojiView::getInstance()->size());
+						if (!emotionView_rect.contains(pos))
+						{
+							QQChatEmojiView::getInstance()->hide();
+						}
 					}
 				}
 			}
@@ -1432,6 +1438,49 @@ void QQDesktop::do_chat_limitUserInputTextCount()
 
 void QQDesktop::do_chat_userClickSendAudioButton()
 {
+	ui->main_chatTab_chatStack_NotNULL_inputStack->setCurrentIndex(1);
+	QModelIndex index = ui->main_chatTab_listStack_NotNULL_listView->currentIndex();
+	ClientConfigs::UserFriend_C *user = const_cast<ClientConfigs::UserFriend_C *>(qvariant_cast<ClientConfigs::UserFriend_C *>(index.data(Qt::UserRole)));
+	ClientConfigs::UserGroup_C *group = const_cast<ClientConfigs::UserGroup_C *>(qvariant_cast<ClientConfigs::UserGroup_C *>(index.data(Qt::UserRole)));
+	if (user != nullptr)
+	{
+		QString senderID = QString::fromStdString(GlobalValuesAgent::m_user.m_ID);
+		QString receiverID = QString::fromStdString(user->m_ID);
+		QString time = QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch());
+		QString fileName = senderID + "_" + receiverID + "_" + time + "." + GlobalValuesAgent::AUDIO_FORMAT;
+		ui->main_chatTab_chatStack_NotNULL_inputMusic->setMFileName(fileName);
+		ui->main_chatTab_chatStack_NotNULL_inputMusic->setMMax(GlobalValuesAgent::MAX_AUDIO_TIME);
+		ui->main_chatTab_chatStack_NotNULL_inputMusic->setMMin(GlobalValuesAgent::MIN_AUDIO_TIME);
+	}
+	else if (group != nullptr)
+	{
+		QString senderID = QString::fromStdString(GlobalValuesAgent::m_user.m_ID);
+		QString receiverID = QString::fromStdString(group->m_ID);
+		QString time = QString::number(QDateTime::currentDateTime().toMSecsSinceEpoch());
+		QString fileName = senderID + "_" + receiverID + "_" + time + "." + GlobalValuesAgent::AUDIO_FORMAT;
+		ui->main_chatTab_chatStack_NotNULL_inputMusic->setMFileName(fileName);
+		ui->main_chatTab_chatStack_NotNULL_inputMusic->setMMax(GlobalValuesAgent::MAX_AUDIO_TIME);
+		ui->main_chatTab_chatStack_NotNULL_inputMusic->setMMin(GlobalValuesAgent::MIN_AUDIO_TIME);
+	}
+	ui->main_chatTab_chatStack_NotNULL_inputMusic->setFocus();
+}
+
+void QQDesktop::do_chat_userClickEscInAudioView()
+{
+	ui->main_chatTab_chatStack_NotNULL_inputStack->setCurrentIndex(0);
+	ui->main_chatTab_chatStack_NotNULL_inputMusic->clearFocus();
+}
+
+void QQDesktop::do_chat_userAudioDataOverTheLimit(int time)
+{
+	if (time < GlobalValuesAgent::MIN_AUDIO_TIME)
+	{
+		ElaMessageBar::warning(ElaMessageBarType::PositionPolicy::Bottom, "", QString::fromLocal8Bit("录音时间过短"), 2000, this);
+	}
+	else if (time > GlobalValuesAgent::MAX_AUDIO_TIME)
+	{
+		ElaMessageBar::warning(ElaMessageBarType::PositionPolicy::Bottom, "", QString::fromLocal8Bit("录音时间过长"), 2000, this);
+	}
 }
 
 void QQDesktop::do_chat_userClickClearInputButton()
