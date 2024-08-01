@@ -1,0 +1,5 @@
+﻿<RCC>
+    <qresource prefix="/QQLoginWidget">
+        <file>../images/QQ.png</file>
+    </qresource>
+</RCC>

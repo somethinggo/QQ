@@ -1,0 +1,112 @@
+<RCC>
+    <qresource prefix="/emoji/option">
+        <file>../images/emoji/option/emojiBtnIcon_no.png</file>
+        <file>../images/emoji/option/emojiBtnIcon_yes.png</file>
+        <file>../images/emoji/option/likeBtnIcon_no.png</file>
+        <file>../images/emoji/option/likeBtnIcon_yes.png</file>
+        <file>../images/emoji/option/appendIcon_no.png</file>
+        <file>../images/emoji/option/appendIcon_yes.png</file>
+    </qresource>
+    <qresource prefix="/emoji/emoji">
+        <file>../images/emoji/emoji/loading.gif</file>
+    </qresource>
+    <qresource prefix="/widget/main/chat">
+        <file>../images/widget/main/chat/audio_no.png</file>
+        <file>../images/widget/main/chat/audio_yes.png</file>
+        <file>../images/widget/main/chat/emoji_no.png</file>
+        <file>../images/widget/main/chat/emoji_yes.png</file>
+        <file>../images/widget/main/chat/file_no.png</file>
+        <file>../images/widget/main/chat/file_yes.png</file>
+        <file>../images/widget/main/chat/font_no.png</file>
+        <file>../images/widget/main/chat/font_yes.png</file>
+        <file>../images/widget/main/chat/histroy_no.png</file>
+        <file>../images/widget/main/chat/histroy_yes.png</file>
+        <file>../images/widget/main/chat/picture_no.png</file>
+        <file>../images/widget/main/chat/picture_yes.png</file>
+        <file>../images/widget/main/chat/upper_no.png</file>
+        <file>../images/widget/main/chat/upper_yes.png</file>
+        <file>../images/widget/main/chat/delete_no.png</file>
+        <file>../images/widget/main/chat/delete_yes.png</file>
+        <file>../images/widget/main/chat/nodisturb_no.png</file>
+        <file>../images/widget/main/chat/nodisturb_yes.png</file>
+        <file>../images/widget/main/chat/report_no.png</file>
+        <file>../images/widget/main/chat/report_yes.png</file>
+        <file>../images/widget/main/chat/top_no.png</file>
+        <file>../images/widget/main/chat/top_yes.png</file>
+        <file>../images/widget/main/chat/unread_no.png</file>
+        <file>../images/widget/main/chat/unread_yes.png</file>
+    </qresource>
+    <qresource prefix="/widget/main/friendAndGroup">
+        <file>../images/widget/main/friendAndGroup/append_no.png</file>
+        <file>../images/widget/main/friendAndGroup/append_yes.png</file>
+        <file>../images/widget/main/friendAndGroup/delete_no.png</file>
+        <file>../images/widget/main/friendAndGroup/delete_yes.png</file>
+        <file>../images/widget/main/friendAndGroup/rename_no.png</file>
+        <file>../images/widget/main/friendAndGroup/rename_yes.png</file>
+        <file>../images/widget/main/friendAndGroup/like_no.png</file>
+        <file>../images/widget/main/friendAndGroup/like_yes.png</file>
+        <file>../images/widget/main/friendAndGroup/group_no.png</file>
+        <file>../images/widget/main/friendAndGroup/group_yes.png</file>
+        <file>../images/widget/main/friendAndGroup/remarks_no.png</file>
+        <file>../images/widget/main/friendAndGroup/remarks_yes.png</file>
+    </qresource>
+    <qresource prefix="/widget/main/friendCircle"/>
+    <qresource prefix="/widget/main/skin"/>
+    <qresource prefix="/widget/main/search">
+        <file>../images/widget/main/search/delete_no.png</file>
+        <file>../images/widget/main/search/delete_yes.png</file>
+        <file>../images/widget/main/search/emoji_no.png</file>
+        <file>../images/widget/main/search/emoji_yes.png</file>
+        <file>../images/widget/main/search/file_no.png</file>
+        <file>../images/widget/main/search/file_yes.png</file>
+        <file>../images/widget/main/search/group_no.png</file>
+        <file>../images/widget/main/search/group_yes.png</file>
+        <file>../images/widget/main/search/link_no.png</file>
+        <file>../images/widget/main/search/link_yes.png</file>
+        <file>../images/widget/main/search/movie_no.png</file>
+        <file>../images/widget/main/search/movie_yes.png</file>
+        <file>../images/widget/main/search/people_no.png</file>
+        <file>../images/widget/main/search/people_yes.png</file>
+        <file>../images/widget/main/search/picture_no.png</file>
+        <file>../images/widget/main/search/picture_yes.png</file>
+        <file>../images/widget/main/search/record_no.png</file>
+        <file>../images/widget/main/search/record_yes.png</file>
+    </qresource>
+    <qresource prefix="/widget/option">
+        <file>../images/widget/option/chat_no.png</file>
+        <file>../images/widget/option/chat_yes.png</file>
+        <file>../images/widget/option/friendAndGroup_no.png</file>
+        <file>../images/widget/option/friendAndGroup_yes.png</file>
+        <file>../images/widget/option/friendCircle_no.png</file>
+        <file>../images/widget/option/friendCircle_yes.png</file>
+        <file>../images/widget/option/intepretion.png</file>
+        <file>../images/widget/option/search_no.png</file>
+        <file>../images/widget/option/search_yes.png</file>
+        <file>../images/widget/option/setting.png</file>
+        <file>../images/widget/option/skin_no.png</file>
+        <file>../images/widget/option/skin_yes.png</file>
+    </qresource>
+    <qresource prefix="/widget/common">
+        <file>../images/widget/common/audioBackground.gif</file>
+        <file>../images/widget/common/nullBackground.png</file>
+        <file>../images/widget/common/QQ.png</file>
+        <file>../images/widget/common/searchLab.png</file>
+        <file>../images/widget/common/searchMore.png</file>
+        <file>../images/widget/common/searchMoreOne.png</file>
+        <file>../images/widget/common/searchMoreTwo.png</file>
+        <file>../images/widget/common/downShow.png</file>
+        <file>../images/widget/common/down.png</file>
+        <file>../images/widget/common/loading.gif</file>
+        <file>../images/widget/common/error.png</file>
+        <file>../images/widget/common/distrup_no.png</file>
+        <file>../images/widget/common/distrup_yes.png</file>
+    </qresource>
+    <qresource prefix="/file">
+        <file>../images/file/undefined.png</file>
+        <file>../images/file/cancel.png</file>
+        <file>../images/file/download.png</file>
+        <file>../images/file/excel.png</file>
+        <file>../images/file/powerpoint.png</file>
+        <file>../images/file/word.png</file>
+    </qresource>
+</RCC>
