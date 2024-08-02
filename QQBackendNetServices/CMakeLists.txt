@@ -1,7 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.5)
 project(QQBackendNetServices LANGUAGES CXX)
 
-add_definitions(-w) # 禁用所有警告
 set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(Qt_DIR "C:/Qt/5.15.2/msvc2019_64/include")
@@ -51,7 +50,7 @@ else()
     add_executable(${PROJECT_NAME} WIN32 ${SRC_FILES} ${MOC_OUTPUT})
   endif()
 endif()
-
+target_compile_options(${PROJECT_NAME} PRIVATE -w)
 target_link_libraries(
   ${PROJECT_NAME}
   PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Network

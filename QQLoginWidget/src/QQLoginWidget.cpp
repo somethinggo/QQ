@@ -159,7 +159,7 @@ QQLoginWidget::QQLoginWidget(QWidget *parent)
 	ui->stackedWidget->setCurrentIndex(0);
 
 	qApp->installEventFilter(this);
-	connect(this, &QQLoginWidget::sign_showEnbaleBtn, this, &QQLoginWidget::do_showEnableBtn);
+	connect(&m_localSocket, &QLocalSocket::readyRead, this, &QQLoginWidget::do_handleLocalSocketReadyRead);
 	connect(ui->loginAccountInput, &QLineEdit::textChanged, this, &QQLoginWidget::do_senderEnableBtn);
 	connect(ui->loginPasswordInput, &QLineEdit::textChanged, this, &QQLoginWidget::do_senderEnableBtn);
 	connect(ui->registerNikeNameInput, &QLineEdit::textChanged, this, &QQLoginWidget::do_senderEnableBtn);
@@ -179,6 +179,22 @@ QQLoginWidget::~QQLoginWidget()
 {
 	delete m_proxyStyle;
 	delete ui;
+}
+
+void QQLoginWidget::disEnableAllWidget(bool isEnable)
+{
+	ui->loginAccountInput->setEnabled(isEnable);
+	ui->loginPasswordInput->setEnabled(isEnable);
+	ui->loginBtn->setEnabled(isEnable);
+	ui->loginBtnBox->setEnabled(isEnable);
+	ui->registerNikeNameInput->setEnabled(isEnable);
+	ui->registerPasswordInput->setEnabled(isEnable);
+	ui->registerNumberInput->setEnabled(isEnable);
+	ui->registerBtn->setEnabled(isEnable);
+	ui->registerBtnBox->setEnabled(isEnable);
+	ui->findPasswordNumberInput->setEnabled(isEnable);
+	ui->findPasswordBtn->setEnabled(isEnable);
+	ui->findPasswordBtnBox->setEnabled(isEnable);
 }
 
 bool QQLoginWidget::eventFilter(QObject *watched, QEvent *event)
@@ -255,20 +271,82 @@ bool QQLoginWidget::eventFilter(QObject *watched, QEvent *event)
 	return QWidget::eventFilter(watched, event);
 }
 
-void QQLoginWidget::closeEvent(QCloseEvent *event)
+void QQLoginWidget::do_handleLocalSocketReadyRead()
 {
-	QJsonObject closeDate;
-	closeDate.insert("version", "1.0");
-	closeDate.insert("sender", "QQLoginWidget");
-	closeDate.insert("action", "close");
-	m_localSocket.write(QJsonDocument(closeDate).toJson());
-	m_localSocket.waitForBytesWritten();
-	m_localSocket.disconnect();
-	if (m_localSocket.state() != QAbstractSocket::UnconnectedState)
+	disEnableAllWidget(true);
+	QByteArray data = m_localSocket.readAll();
+	QJsonObject answerData = QJsonDocument::fromJson(data).object();
+	QString action = answerData["action"].toString();
+	if (action == "login-reply")
 	{
-		m_localSocket.waitForDisconnected(3000);
+		QJsonObject returnData = answerData["data"].toObject();
+		if (returnData["result"] == "success")
+		{
+			this->close();
+			qApp->exit(0);
+		}
+		else if (returnData["result"] == "fail")
+		{
+			m_progress->hide();
+			ui->loginBtn->setIcon(QIcon());
+			ui->loginBtn->setText(QString::fromLocal8Bit("登录"));
+			if (returnData["error"] == "account")
+			{
+				ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("账号不存在!!!请检查输入!!!"), 3000, this);
+			}
+			else if (returnData["error"] == "password")
+			{
+				ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("密码错误!!!请检查输入!!!"), 3000, this);
+			}
+		}
+		else
+		{
+			QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("应用程序崩溃,请从官网下载最新版!!!"));
+			this->close();
+			qApp->exit(0);
+		}
 	}
-	return QWidget::closeEvent(event);
+	else if (action == "register-reply")
+	{
+		QJsonObject returnData = answerData["data"].toObject();
+		if (returnData["result"] == "success")
+		{
+			this->close();
+			qApp->exit(0);
+		}
+		else if (returnData["state"] == "reject")
+		{
+			m_progress->hide();
+			ui->registerBtn->setIcon(QIcon());
+			ui->registerBtn->setText(QString::fromLocal8Bit("注册"));
+			if (returnData["error"] == "nikeName")
+			{
+				ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("昵称违规!!!请检查输入!!!"), 3000, this);
+			}
+			else if (returnData["error"] == "number")
+			{
+				ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("手机号码不存在!!!请检查输入!!!"), 3000, this);
+			}
+			else if (returnData["error"] == "password")
+			{
+				ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("密码不符合要求!!!请检查输入!!!"), 3000, this);
+			}
+		}
+	}
+	else if (action == "findPassword-reply")
+	{
+		m_progress->hide();
+		ui->findPasswordBtn->setIcon(QIcon());
+		ui->findPasswordBtn->setText(QString::fromLocal8Bit("找回密码"));
+		QJsonObject returnData = QJsonDocument::fromJson(data).object();
+		if (returnData["result"] == "fail")
+		{
+			if (returnData["error"] == "number")
+			{
+				ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("手机号码不存在!!!请检查输入!!!"), 3000, this);
+			}
+		}
+	}
 }
 
 void QQLoginWidget::do_senderEnableBtn()
@@ -338,52 +416,35 @@ void QQLoginWidget::do_senderEnableBtn()
 	case 0:
 		if (m_count == 2)
 		{
-			emit sign_showEnbaleBtn(true, ui->loginBtn);
+			ui->loginBtn->setEnabled(true);
 		}
 		else
 		{
-			emit sign_showEnbaleBtn(false, ui->loginBtn);
+			ui->loginBtn->setEnabled(false);
 		}
 		break;
 	case 1:
 		if (m_count == 3)
 		{
-			emit sign_showEnbaleBtn(true, ui->registerBtn);
+			ui->registerBtn->setEnabled(true);
 		}
 		else
 		{
-			emit sign_showEnbaleBtn(false, ui->registerBtn);
+			ui->registerBtn->setEnabled(false);
 		}
 		break;
 	case 2:
 		if (m_count == 1)
 		{
-			emit sign_showEnbaleBtn(true, ui->findPasswordBtn);
+			ui->findPasswordBtn->setEnabled(true);
 		}
 		else
 		{
-			emit sign_showEnbaleBtn(false, ui->findPasswordBtn);
+			ui->findPasswordBtn->setEnabled(false);
 		}
 		break;
 	default:
 		break;
-	}
-}
-
-void QQLoginWidget::do_showEnableBtn(bool isEnable, QPushButton *button)
-{
-	button->setEnabled(isEnable);
-	if (isEnable)
-	{
-		QPalette buttonPalette = button->palette();
-		buttonPalette.setColor(QPalette::Button, QColor("#0099FF"));
-		button->setPalette(buttonPalette);
-	}
-	else
-	{
-		QPalette buttonPalette = button->palette();
-		buttonPalette.setColor(QPalette::Button, QColor("#9AD8FF"));
-		button->setPalette(buttonPalette);
 	}
 }
 
@@ -411,17 +472,17 @@ void QQLoginWidget::do_changedCurrentIndex()
 	{
 	case 0:
 		ui->loginPasswordInput->clear();
-		emit sign_showEnbaleBtn(false, ui->loginBtn);
+		ui->loginBtn->setEnabled(false);
 		break;
 	case 1:
 		ui->registerNikeNameInput->clear();
 		ui->registerPasswordInput->clear();
 		ui->registerNumberInput->clear();
-		emit sign_showEnbaleBtn(false, ui->registerBtn);
+		ui->registerBtn->setEnabled(false);
 		break;
 	case 2:
 		ui->findPasswordNumberInput->clear();
-		emit sign_showEnbaleBtn(false, ui->findPasswordBtn);
+		ui->findPasswordBtn->setEnabled(false);
 		break;
 	default:
 		break;
@@ -444,7 +505,7 @@ void QQLoginWidget::do_loginBtnClicked()
 		return;
 	}
 
-	ui->loginBtn->setEnabled(false);
+	disEnableAllWidget(false);
 	ui->loginBtn->setText(QString::fromLocal8Bit("登录中..."));
 	QPoint pos = ui->loginBtn->mapTo(this, QPoint(0, 0));
 	int textLength = ui->loginBtn->fontMetrics().horizontalAdvance(ui->loginBtn->text());
@@ -461,50 +522,13 @@ void QQLoginWidget::do_loginBtnClicked()
 	data.insert("password", password);
 	loginData.insert("data", data);
 	m_localSocket.write(QJsonDocument(loginData).toJson());
-	m_localSocket.waitForBytesWritten();
+	m_localSocket.flush();
 
-	if (m_localSocket.waitForReadyRead(3000))
-	{
-		QByteArray data = m_localSocket.readAll();
-		QJsonObject answerData = QJsonDocument::fromJson(data).object();
-		QJsonObject returnData = answerData["data"].toObject();
-		if (returnData["result"] == "success")
-		{
-			this->close();
-			qApp->exit(0);
-		}
-		else if (returnData["result"] == "fail")
-		{
-			m_progress->hide();
-			ui->loginBtn->setIcon(QIcon());
-			ui->loginBtn->setText(QString::fromLocal8Bit("登录"));
-			ui->loginBtn->setEnabled(true);
-			QPalette loginPalette = ui->loginBtn->palette();
-			loginPalette.setColor(QPalette::Button, QColor("#0099FF"));
-			loginPalette.setColor(QPalette::ButtonText, Qt::white);
-			ui->loginBtn->setPalette(loginPalette);
-			if (returnData["error"] == "account")
-			{
-				ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("账号不存在!!!请检查输入!!!"), 3000, this);
-			}
-			else if (returnData["error"] == "password")
-			{
-				ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("密码错误!!!请检查输入!!!"), 3000, this);
-			}
-		}
-		else
-		{
-			QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("应用程序崩溃,请从官网下载最新版!!!"));
-			this->close();
-			qApp->exit(0);
-		}
-	}
-	else
-	{
+	QTimer::singleShot(3000, [this]
+					   {
 		QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("应用程序崩溃,请从官网下载最新版!!!"));
 		this->close();
-		qApp->exit(0);
-	}
+		qApp->exit(0); });
 }
 
 void QQLoginWidget::do_registerBtnClicked()
@@ -529,7 +553,7 @@ void QQLoginWidget::do_registerBtnClicked()
 		return;
 	}
 
-	ui->registerBtn->setEnabled(false);
+	disEnableAllWidget(false);
 	ui->registerBtn->setText(QString::fromLocal8Bit("注册中..."));
 	QPoint pos = ui->registerBtn->mapTo(this, QPoint(0, 0));
 	int textLength = ui->registerBtn->fontMetrics().horizontalAdvance(ui->registerBtn->text());
@@ -547,48 +571,13 @@ void QQLoginWidget::do_registerBtnClicked()
 	data.insert("number", number);
 	registerData.insert("data", data);
 	m_localSocket.write(QJsonDocument(registerData).toJson());
-	m_localSocket.waitForBytesWritten();
+	m_localSocket.flush();
 
-	if (m_localSocket.waitForReadyRead(3000))
-	{
-		QByteArray data = m_localSocket.readAll();
-		QJsonObject answerData = QJsonDocument::fromJson(data).object();
-		QJsonObject returnData = answerData["data"].toObject();
-		if (returnData["result"] == "success")
-		{
-			this->close();
-			qApp->exit(0);
-		}
-		else if (returnData["state"] == "reject")
-		{
-			m_progress->hide();
-			ui->registerBtn->setIcon(QIcon());
-			ui->registerBtn->setText(QString::fromLocal8Bit("注册"));
-			ui->registerBtn->setEnabled(true);
-			QPalette registerPalette = ui->registerBtn->palette();
-			registerPalette.setColor(QPalette::Button, QColor("#0099FF"));
-			registerPalette.setColor(QPalette::ButtonText, Qt::white);
-			ui->registerBtn->setPalette(registerPalette);
-			if (returnData["error"] == "nikeName")
-			{
-				ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("昵称违规!!!请检查输入!!!"), 3000, this);
-			}
-			else if (returnData["error"] == "number")
-			{
-				ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("手机号码不存在!!!请检查输入!!!"), 3000, this);
-			}
-			else if (returnData["error"] == "password")
-			{
-				ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("密码不符合要求!!!请检查输入!!!"), 3000, this);
-			}
-		}
-	}
-	else
-	{
+	QTimer::singleShot(3000, [this]
+					   {
 		QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("应用程序崩溃,请从官网下载最新版!!!"));
 		this->close();
-		qApp->exit(0);
-	}
+		qApp->exit(0); });
 }
 
 void QQLoginWidget::do_findPasswordBtnClicked()
@@ -599,11 +588,7 @@ void QQLoginWidget::do_findPasswordBtnClicked()
 		ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("手机号码长度必须为11位!!!请检查输入!!!"), 3000, this);
 		return;
 	}
-	ui->findPasswordBtn->setEnabled(false);
-	QPalette m_findPasswordPalette = ui->findPasswordBtn->palette();
-	m_findPasswordPalette.setColor(QPalette::Button, QColor("#9AD8FF"));
-	m_findPasswordPalette.setColor(QPalette::ButtonText, Qt::white);
-	ui->findPasswordBtn->setPalette(m_findPasswordPalette);
+	disEnableAllWidget(false);
 	ui->findPasswordBtn->setText(QString::fromLocal8Bit("找回中..."));
 	QPoint pos = ui->findPasswordBtn->mapTo(this, QPoint(0, 0));
 	int textLength = ui->findPasswordBtn->fontMetrics().horizontalAdvance(ui->findPasswordBtn->text());
@@ -621,30 +606,9 @@ void QQLoginWidget::do_findPasswordBtnClicked()
 	m_localSocket.write(QJsonDocument(findPasswordData).toJson());
 	m_localSocket.waitForBytesWritten();
 
-	if (m_localSocket.waitForReadyRead(3000))
-	{
-		m_progress->hide();
-		ui->findPasswordBtn->setIcon(QIcon());
-		ui->findPasswordBtn->setText(QString::fromLocal8Bit("找回密码"));
-		ui->findPasswordBtn->setEnabled(true);
-		QPalette findPasswordPalette = ui->findPasswordBtn->palette();
-		findPasswordPalette.setColor(QPalette::Button, QColor("#0099FF"));
-		findPasswordPalette.setColor(QPalette::ButtonText, Qt::white);
-		ui->findPasswordBtn->setPalette(findPasswordPalette);
-		QByteArray data = m_localSocket.readAll();
-		QJsonObject returnData = QJsonDocument::fromJson(data).object();
-		if (returnData["result"] == "fail")
-		{
-			if (returnData["error"] == "number")
-			{
-				ElaMessageBar::warning(ElaMessageBarType::Top, "", QString::fromLocal8Bit("手机号码不存在!!!请检查输入!!!"), 3000, this);
-			}
-		}
-	}
-	else
-	{
+	QTimer::singleShot(3000, [this]
+					   {
 		QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("应用程序崩溃,请从官网下载最新版!!!"));
 		this->close();
-		qApp->exit(0);
-	}
+		qApp->exit(0); });
 }

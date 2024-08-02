@@ -42,10 +42,18 @@ class QQLoginWidget : public QWidget
 public:
 	QQLoginWidget(QWidget *parent = nullptr);
 	~QQLoginWidget();
+	void disEnableAllWidget(bool isEnable);
 
 protected:
 	bool eventFilter(QObject *watched, QEvent *event) override;
-	void closeEvent(QCloseEvent *event) override;
+
+private slots:
+	void do_handleLocalSocketReadyRead();
+	void do_senderEnableBtn();
+	void do_changedCurrentIndex();
+	void do_loginBtnClicked();
+	void do_registerBtnClicked();
+	void do_findPasswordBtnClicked();
 
 private:
 	Ui::QQLoginWidgetClass *ui;
@@ -54,14 +62,5 @@ private:
 	QValidator *m_passwordValidator;		// 验证输入的是否为密码
 	QStyle *m_proxyStyle;					// 自定义样式
 	QtMaterialCircularProgress *m_progress; // 点击登录按钮时的进度条
-	qint8 m_count;							// 记录点击登录按钮的次数
-signals:
-	void sign_showEnbaleBtn(bool isEnable, QPushButton *button);
-private slots:
-	void do_senderEnableBtn();
-	void do_showEnableBtn(bool isEnable, QPushButton *button);
-	void do_changedCurrentIndex();
-	void do_loginBtnClicked();
-	void do_registerBtnClicked();
-	void do_findPasswordBtnClicked();
+	uint64_t m_count;						// 记录点击登录按钮的次数
 };

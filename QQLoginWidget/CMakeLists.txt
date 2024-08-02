@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required(VERSION 3.5)
 project(QQLoginWidget LANGUAGES CXX)
 
-set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(Qt_DIR "C:/Qt/5.15.2/msvc2019_64")
 set(CMAKE_PREFIX_PATH Qt_DIR)

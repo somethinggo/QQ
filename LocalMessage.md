@@ -8,12 +8,55 @@
     "sender": "发送者",
     "action": "行为",
     "data":
-        {
-            "key": "value",
-        },
+    {
+        "key": "value",
+    },
     "extend": "预留扩展"
 }
 ```
 
-#### data中的数据是多对模式
+#### 登录界面发送登录请求的消息体
+
+```json
+{
+    "version":"默认版本号",
+    "sender":"QQLoginWidget",
+    "action":"login",
+    "data":
+    {
+        "account":account,
+        "password":password
+    }
+}
+```
+
+#### 登录界面发送注册请求的消息体
+
+```json
+{
+    "version":"默认版本号",
+    "sender":"QQLoginWidget",
+    "action":"register",
+    "data":
+    {
+        "nikeName":nikeName,
+        "password":password,
+        "number":number
+    }
+}
+```
+
+#### 登录界面发送找回请求的消息体
+
+```json
+{
+    "version":"默认版本号",
+    "sender":"QQLoginWiget",
+    "action":"findPassword",
+    "data":
+    {
+        "number":number
+    }
+}
+```
 
