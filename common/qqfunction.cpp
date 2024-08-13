@@ -41,39 +41,47 @@ namespace QQFunctions
         return pixmap;
     }
 
-    QPair<QRect, QString> getCalculateTextRects(const QString &text, const QFont &font, quint64 MAXW, bool elided)
+    QString getCalculateText(const QString &text, const QFont &font, quint64 MAXW, bool elided = false)
     {
-        QString result = text;
         QFontMetrics fm(font);
-        qreal width = fm.horizontalAdvance(result);
-        qreal height = fm.height();
         if (elided)
         {
-            result = fm.elidedText(result, Qt::ElideRight, MAXW);
-            width = fm.horizontalAdvance(result);
+            return fm.elidedText(text, Qt::ElideRight, MAXW);
         }
-        else if (width > MAXW)
+        int width = fm.horizontalAdvance(text);
+        if (width < MAXW)
         {
-            width = MAXW;
+            return text;
+        }
+        else
+        {
+            QStringList lines;
             int start = 0;
-            while (start < result.length())
+            int length = text.length();
+            while (start < length)
             {
                 int end = start;
-                while (end < result.length())
+                int len = 0;
+                while (end < length)
                 {
-                    int len = fm.horizontalAdvance(result.mid(start, end - start));
-                    if (len >= MAXW)
+                    len += fm.horizontalAdvance(text.mid(end, 1));
+                    if (len > MAXW)
                     {
-                        result.insert(end - 1, "\n");
-                        height += fm.height();
                         break;
                     }
                     end++;
                 }
+                lines.append(text.mid(start, end - start));
                 start = end;
             }
+            return lines.join("\n");
         }
-        return QPair<QRect, QString>(QRect(0, 0, width, height), result);
+    }
+
+    QRect getCalculateTextRect(const QString &text, const QFont &font)
+    {
+        QFontMetrics fm(font);
+        return fm.boundingRect(text);
     }
 
     QBitmap getRoundedMask(const QSize &size, qreal radius, QQEnums::RoundPostionTypes types)
@@ -214,13 +222,16 @@ namespace QQFunctions
         return randomString;
     }
 
-    bool getMouseIsInWidget(QWidget *widget)
+    bool getMouseIsInWidget(QWidget *widget, QPoint pos)
     {
         if (widget == nullptr || !widget->isVisible())
         {
             return false;
         }
-        QPoint pos = QCursor::pos();
+        if (pos.isNull())
+        {
+            pos = QCursor::pos();
+        }
         QRect widgetRect = widget->rect().translated(widget->mapToGlobal(QPoint(0, 0)));
         return widgetRect.contains(pos);
     }

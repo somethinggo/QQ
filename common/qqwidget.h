@@ -4,6 +4,7 @@
 #include <qapplication.h>
 #include <qwidget.h>
 #include <qdialog.h>
+#include <qscrollbar.h>
 #include <qlayout.h>
 #include <qtabbar.h>
 #include <qlabel.h>
@@ -17,6 +18,7 @@
 #include <qpropertyanimation.h>
 #include <qproxystyle.h>
 #include <qstyleoption.h>
+#include <qlistview.h>
 #include <functional>
 #include <optional>
 
@@ -228,6 +230,16 @@ namespace QQWidgets
     private slots:
         void do_animationValueChanged(const QVariant &value);
         void do_animationFinished();
+    };
+
+    class PixelListView : public QListView
+    {
+    public:
+        explicit PixelListView(QWidget *parent = nullptr);
+        virtual ~PixelListView();
+
+    protected:
+        void wheelEvent(QWheelEvent *event) override;
     };
 }
 

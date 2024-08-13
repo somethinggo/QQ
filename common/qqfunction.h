@@ -43,15 +43,22 @@ namespace QQFunctions
 	QPixmap getRounedPixmap(const QPixmap &src, int radius);
 
 	/**
-	 * @brief 获取文本绘制区域,修改文本适应区域
+	 * @brief 修改文本适应区域(基于宽度进行适应)
+	 * @param text 文本
+	 * @param font 字体
+	 * @return 适应文本
+	 */
+	QString getCalculateText(const QString &text, const QFont &font, quint64 MAXW = UINT64_MAX, bool elided = false);
+
+	/**
+	 * @brief 获取文本的绘制矩形
 	 * @param text 文本
 	 * @param font 字体
 	 * @param MAXW 最大宽度
 	 * @param elided 是否省略
-	 * @return 绘制区域与文本
-	 * @note 返回值.first为区域，.second为文本
+	 * @return 绘制矩形
 	 */
-	QPair<QRect, QString> getCalculateTextRects(const QString &text, const QFont &font, quint64 MAXW = UINT64_MAX, bool elided = false);
+	QRect getCalculateTextRect(const QString &text, const QFont &font);
 
 	/**
 	 * @brief 获取圆角蒙版
@@ -110,9 +117,10 @@ namespace QQFunctions
 	/**
 	 * @brief 获取鼠标是否在控件内
 	 * @param widget 控件
+	 * @param pos 位置
 	 * @return 是否在控件内
 	 */
-	bool getMouseIsInWidget(QWidget *widget);
+	bool getMouseIsInWidget(QWidget *widget, QPoint pos = QPoint());
 
 }
 

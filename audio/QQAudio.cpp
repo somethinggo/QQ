@@ -76,7 +76,14 @@ void QQAudio::keyReleaseEvent(QKeyEvent *event)
 			}
 			else if (!amrData.isEmpty())
 			{
-				Q_MSEND_EVENT(QQEnums::sendaudio, amrData);
+				QJsonObject sendData;
+				sendData.insert("version", "1.0");
+				sendData.insert("sender", "audio");
+				sendData.insert("action", "sendaudio");
+				QJsonObject data;
+				data.insert("type", "amr");
+				data.insert("content", QString(amrData));
+				Q_MSEND_EVENT(QQEnums::sendaudio, QJsonDocument(data).toJson());
 			}
 			m_audioData.clear();
 		}
@@ -140,7 +147,7 @@ void QQAudio::paintEvent(QPaintEvent *event)
 		painter.setPen(Qt::black);
 		painter.setFont(QFont("Microsoft YaHei", 10));
 		QString text = QString::fromLocal8Bit("按住空格键说话,松开发送,按下Esc键退出");
-		QRect rect = QQFunctions::getCalculateTextRects(text, painter.font()).first;
+		QRect rect = QQFunctions::getCalculateTextRect(text, painter.font());
 		rect.moveTopLeft(QPoint(this->width() / 2 - rect.width() / 2, this->height() / 2 + radius + 10));
 		painter.drawText(rect, Qt::AlignCenter, text);
 	}

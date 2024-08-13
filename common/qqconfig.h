@@ -8,8 +8,8 @@
 #include <qdebug.h>
 #endif
 
-#include "qqtheme.h"
 #include "qqenums.h"
+#include "qqglobal.h"
 #include "qqbase.h"
 
 namespace QQConfigs

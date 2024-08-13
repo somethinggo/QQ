@@ -742,4 +742,21 @@ namespace QQWidgets
         this->setCurrentIndex(m_nextIndex);
         this->update();
     }
+
+    PixelListView::PixelListView(QWidget *parent)
+        : QListView(parent)
+    {
+        this->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+        this->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    }
+
+    PixelListView::~PixelListView()
+    {
+    }
+
+    void PixelListView::wheelEvent(QWheelEvent *event)
+    {
+        this->verticalScrollBar()->setValue(this->verticalScrollBar()->value() - event->angleDelta().y());
+        event->accept();
+    }
 }

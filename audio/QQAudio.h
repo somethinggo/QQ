@@ -8,6 +8,8 @@
 #include <qbuffer.h>
 #include <qaudioformat.h>
 #include <qfile.h>
+#include <qjsonobject.h>
+#include <qjsondocument.h>
 #include <complex>
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)

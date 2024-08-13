@@ -536,7 +536,7 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QLineEdit" name="registerNikeNameInput">
+        <widget class="QLineEdit" name="registerNicknameInput">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>0</horstretch>

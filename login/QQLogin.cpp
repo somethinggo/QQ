@@ -100,8 +100,8 @@ QQLogin::QQLogin(QWidget *parent)
 		button->setFont(QFont("Microsoft YaHei", 11));
 	}
 
-	ui->registerNikeNameInput->setMask(QQFunctions::getRoundedMask(ui->registerNikeNameInput->size(), 10));
-	ui->registerNikeNameInput->setStyle(m_proxyStyle);
+	ui->registerNicknameInput->setMask(QQFunctions::getRoundedMask(ui->registerNicknameInput->size(), 10));
+	ui->registerNicknameInput->setStyle(m_proxyStyle);
 
 	ui->registerPasswordInput->setValidator(m_passwordValidator);
 	ui->registerPasswordInput->setToolTip(QString::fromLocal8Bit("密码必须包含大小写字母,数字,特殊字符,长度6-12位!!!"));
@@ -161,7 +161,7 @@ QQLogin::QQLogin(QWidget *parent)
 	qApp->installEventFilter(this);
 	connect(ui->loginAccountInput, &QLineEdit::textChanged, this, &QQLogin::do_senderEnableBtn);
 	connect(ui->loginPasswordInput, &QLineEdit::textChanged, this, &QQLogin::do_senderEnableBtn);
-	connect(ui->registerNikeNameInput, &QLineEdit::textChanged, this, &QQLogin::do_senderEnableBtn);
+	connect(ui->registerNicknameInput, &QLineEdit::textChanged, this, &QQLogin::do_senderEnableBtn);
 	connect(ui->registerPasswordInput, &QLineEdit::textChanged, this, &QQLogin::do_senderEnableBtn);
 	connect(ui->registerNumberInput, &QLineEdit::textChanged, this, &QQLogin::do_senderEnableBtn);
 	connect(ui->findPasswordNumberInput, &QLineEdit::textChanged, this, &QQLogin::do_senderEnableBtn);
@@ -186,7 +186,7 @@ void QQLogin::disEnableAllWidget(bool isEnable)
 	ui->loginPasswordInput->setEnabled(isEnable);
 	ui->loginBtn->setEnabled(isEnable);
 	ui->loginBtnBox->setEnabled(isEnable);
-	ui->registerNikeNameInput->setEnabled(isEnable);
+	ui->registerNicknameInput->setEnabled(isEnable);
 	ui->registerPasswordInput->setEnabled(isEnable);
 	ui->registerNumberInput->setEnabled(isEnable);
 	ui->registerBtn->setEnabled(isEnable);
@@ -314,15 +314,15 @@ bool QQLogin::eventFilter(QObject *watched, QEvent *event)
 			}
 			else if (index == 1)
 			{
-				QPoint registerNikeNamePos = ui->registerNikeNameInput->mapToGlobal(QPoint(0, 0));
+				QPoint registerNikeNamePos = ui->registerNicknameInput->mapToGlobal(QPoint(0, 0));
 				QPoint registerPasswordPos = ui->registerPasswordInput->mapToGlobal(QPoint(0, 0));
 				QPoint registerNumberPos = ui->registerNumberInput->mapToGlobal(QPoint(0, 0));
-				QRect registerNikeNameRect(registerNikeNamePos, ui->registerNikeNameInput->size());
+				QRect registerNikeNameRect(registerNikeNamePos, ui->registerNicknameInput->size());
 				QRect registerPasswordRect(registerPasswordPos, ui->registerPasswordInput->size());
 				QRect registerNumberRect(registerNumberPos, ui->registerNumberInput->size());
 				if (registerNikeNameRect.contains(pos))
 				{
-					ui->registerNikeNameInput->setFocus();
+					ui->registerNicknameInput->setFocus();
 				}
 				else if (registerPasswordRect.contains(pos))
 				{
@@ -334,7 +334,7 @@ bool QQLogin::eventFilter(QObject *watched, QEvent *event)
 				}
 				else
 				{
-					ui->registerNikeNameInput->clearFocus();
+					ui->registerNicknameInput->clearFocus();
 					ui->registerPasswordInput->clearFocus();
 					ui->registerNumberInput->clearFocus();
 				}
@@ -382,7 +382,7 @@ void QQLogin::do_senderEnableBtn()
 	}
 	else if (index == 1)
 	{
-		if (ui->registerNikeNameInput->text() != "")
+		if (ui->registerNicknameInput->text() != "")
 		{
 			++m_count;
 		}
@@ -483,7 +483,7 @@ void QQLogin::do_changedCurrentIndex()
 		ui->loginBtn->setEnabled(false);
 		break;
 	case 1:
-		ui->registerNikeNameInput->clear();
+		ui->registerNicknameInput->clear();
 		ui->registerPasswordInput->clear();
 		ui->registerNumberInput->clear();
 		ui->registerBtn->setEnabled(false);
@@ -520,17 +520,11 @@ void QQLogin::do_loginBtnClicked()
 	loginData.insert("data", data);
 
 	Q_MSEND_EVENT(QQEnums::login, QJsonDocument(loginData).toJson());
-
-	QTimer::singleShot(3000, [this]
-					   {
-		QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("应用程序崩溃,请从官网下载最新版!!!"));
-		this->close();
-		qApp->exit(0); });
 }
 
 void QQLogin::do_registerBtnClicked()
 {
-	QString nikeName = ui->registerNikeNameInput->text();
+	QString nickname = ui->registerNicknameInput->text();
 	QString password = ui->registerPasswordInput->text();
 	QString number = ui->registerNumberInput->text();
 
@@ -547,18 +541,12 @@ void QQLogin::do_registerBtnClicked()
 	registerData.insert("sender", "login");
 	registerData.insert("action", "register");
 	QJsonObject data;
-	data.insert("nikeName", nikeName);
+	data.insert("nickname", nickname);
 	data.insert("password", password);
 	data.insert("number", number);
 	registerData.insert("data", data);
 
 	Q_MSEND_EVENT(QQEnums::registered, QJsonDocument(registerData).toJson());
-
-	QTimer::singleShot(3000, [this]
-					   {
-		QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("应用程序崩溃,请从官网下载最新版!!!"));
-		this->close();
-		qApp->exit(0); });
 }
 
 void QQLogin::do_findPasswordBtnClicked()
@@ -582,10 +570,4 @@ void QQLogin::do_findPasswordBtnClicked()
 	findPasswordData.insert("data", data);
 
 	Q_MSEND_EVENT(QQEnums::findpassword, QJsonDocument(findPasswordData).toJson());
-
-	QTimer::singleShot(3000, [this]
-					   {
-		QMessageBox::warning(this, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("应用程序崩溃,请从官网下载最新版!!!"));
-		this->close();
-		qApp->exit(0); });
 }
