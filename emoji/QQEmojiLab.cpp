@@ -74,13 +74,13 @@ void QQEmojiLab::paintEvent(QPaintEvent *event)
     {
         QPainterPath path;
         path.addRoundedRect(this->rect(), 10, 10);
-        painter.fillPath(path, QQThemes::DefaultTheme::getInstance()->m_emojiLab_pressed);
+        painter.fillPath(path, QQGlobals::g_theme->m_emojiLab_pressed);
     }
     else if (m_isHovered)
     {
         QPainterPath path;
         path.addRoundedRect(this->rect(), 10, 10);
-        painter.fillPath(path, QQThemes::DefaultTheme::getInstance()->m_emojiLab_hovered);
+        painter.fillPath(path, QQGlobals::g_theme->m_emojiLab_hovered);
     }
     return QLabel::paintEvent(event);
 }

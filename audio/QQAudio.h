@@ -10,6 +10,7 @@
 #include <qfile.h>
 #include <qjsonobject.h>
 #include <qjsondocument.h>
+#include <qapplication.h>
 #include <complex>
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -42,25 +43,26 @@ extern "C"
 #include <qtemporaryfile.h>
 #endif
 
+#include "qqglobal.h"
 #include "qqfunction.h"
-#include "qqenums.h"
 
 class QQAudio : public QWidget
 {
 	Q_OBJECT
 	Q_MSINGLETON_CREATE(QQAudio)
-	Q_MPROPERTY_CREATE(qreal, MaxTime, m_maxTime)
-	Q_MPROPERTY_CREATE(qreal, MinTime, m_minTime)
 public:
 	explicit QQAudio(QWidget *parent = nullptr);
 	virtual ~QQAudio();
 
 protected:
+	bool event(QEvent *event) override;
 	void keyPressEvent(QKeyEvent *event) override;
 	void keyReleaseEvent(QKeyEvent *event) override;
 	void paintEvent(QPaintEvent *event) override;
 
 private:
+	void respondRequest(const QByteArray &data);
+	void respondClose();
 	/**
 	 * @brief 从音频数据缓存中获取频域分析数据--频域分析,归一化,量化
 	 */
@@ -96,6 +98,8 @@ private:
 	const int MAX_UI_DATA_SIZE = 45;
 	const int MAX_LINE_HEIGHT = 100;
 	const int MAX_GRADIANT_COLOR = 10;
+	QString m_senderID;
+	QString m_receiverID;
 	std::vector<double> m_inputCache;				 // 音频数据缓存,频域分析输入数据
 	std::vector<std::complex<double>> m_outputCache; // 频域分析输出数据
 	fftw_plan m_plan;

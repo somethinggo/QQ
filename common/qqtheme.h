@@ -10,8 +10,6 @@
 #include <qstyle.h>
 #include <qstyleoption.h>
 
-#include "qqdefine.h"
-
 namespace QQThemes
 {
     /**

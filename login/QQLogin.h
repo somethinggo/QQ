@@ -18,7 +18,10 @@
 
 #include "three/include/qtmaterialcircularprogress.h"
 #include "three/include/ElaMessageBar.h"
-#include "common/qqfunction.h"
+
+#include "qqglobal.h"
+#include "qqfunction.h"
+
 #include "ui_QQLogin.h"
 
 QT_BEGIN_NAMESPACE

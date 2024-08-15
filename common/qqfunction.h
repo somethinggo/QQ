@@ -15,6 +15,7 @@
 #include <functional>
 
 #include "qqconfig.h"
+#include "qqenums.h"
 
 namespace QQFunctions
 {
@@ -26,13 +27,13 @@ namespace QQFunctions
 	 * @param ID 用户ID
 	 * @return 用户信息
 	 */
-	QQConfigs::UserFriend_C *getUserInfo(const QString &ID);
+	QQConfigs::FriendConfig *getUserInfo(const QString &ID);
 	/**
 	 * @brief 获取群信息
 	 * @param ID 群ID
 	 * @return 群信息
 	 */
-	QQConfigs::UserGroup_C *getGroupInfo(const QString &ID);
+	QQConfigs::GroupConfig *getGroupInfo(const QString &ID);
 
 	/**
 	 * @brief 获取圆角图片
@@ -40,7 +41,7 @@ namespace QQFunctions
 	 * @param radius 圆角半径
 	 * @return 圆角图片
 	 */
-	QPixmap getRounedPixmap(const QPixmap &src, int radius);
+	QPixmap getRoundedPixmap(const QPixmap &src, int radius);
 
 	/**
 	 * @brief 修改文本适应区域(基于宽度进行适应)

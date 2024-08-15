@@ -5,11 +5,17 @@
 #include <qnamespace.h>
 #include <qflags.h>
 
+#include "qqbase.h"
 #include "qqdefine.h"
 
 namespace QQEnums
 {
     Q_NAMESPACE
+    // 本地化枚举值
+    Q_MDECLARE_FLAGS_BY_NAMESPACE(UserBaseConfig, UserStateType, QQBaseConfigs, QQEnums)
+    Q_MDECLARE_FLAGS_BY_NAMESPACE(GroupBaseConfig, GroupStateType, QQBaseConfigs, QQEnums)
+    Q_MDECLARE_FLAGS_BY_NAMESPACE(MessageBaseConfig, MessageType, QQBaseConfigs, QQEnums)
+    Q_MDECLARE_FLAGS_BY_NAMESPACE(DynamicBaseConfig, DynamicType, QQBaseConfigs, QQEnums)
 
     // 事件枚举
     enum class EventType
@@ -22,17 +28,23 @@ namespace QQEnums
         accpectlogout,
         accpectregistered,
         accpectfindpassword,
-        sendmessage,
-        sendpicture,
+        sendtext,
+        sendimage,
+        sendlink,
+        sendemoji,
         sendaudio,
         sendfile,
-        sendemoji,
+        sendreport,
         searchfriend,
         searchgroup,
         addfriend,
         addgroup,
         addemoji,
         loademoji,
+        loadmessage,
+        loadset,
+        requestaudio,
+        requestfile,
     };
     Q_MREGISTER_EVENT(login, static_cast<int>(EventType::login))
     Q_MREGISTER_EVENT(logout, static_cast<int>(EventType::logout))
@@ -42,17 +54,23 @@ namespace QQEnums
     Q_MREGISTER_EVENT(accpectlogout, static_cast<int>(EventType::accpectlogout))
     Q_MREGISTER_EVENT(accpectregistered, static_cast<int>(EventType::accpectregistered))
     Q_MREGISTER_EVENT(accpectfindpassword, static_cast<int>(EventType::accpectfindpassword))
-    Q_MREGISTER_EVENT(sendmessage, static_cast<int>(EventType::sendmessage))
-    Q_MREGISTER_EVENT(sendpicture, static_cast<int>(EventType::sendpicture))
+    Q_MREGISTER_EVENT(sendtext, static_cast<int>(EventType::sendtext))
+    Q_MREGISTER_EVENT(sendimage, static_cast<int>(EventType::sendimage))
+    Q_MREGISTER_EVENT(sendlink, static_cast<int>(EventType::sendlink))
+    Q_MREGISTER_EVENT(sendemoji, static_cast<int>(EventType::sendemoji))
     Q_MREGISTER_EVENT(sendaudio, static_cast<int>(EventType::sendaudio))
     Q_MREGISTER_EVENT(sendfile, static_cast<int>(EventType::sendfile))
-    Q_MREGISTER_EVENT(sendemoji, static_cast<int>(EventType::sendemoji))
+    Q_MREGISTER_EVENT(sendreport, static_cast<int>(EventType::sendreport))
     Q_MREGISTER_EVENT(searchfriend, static_cast<int>(EventType::searchfriend))
     Q_MREGISTER_EVENT(searchgroup, static_cast<int>(EventType::searchgroup))
     Q_MREGISTER_EVENT(addfriend, static_cast<int>(EventType::addfriend))
     Q_MREGISTER_EVENT(addgroup, static_cast<int>(EventType::addgroup))
     Q_MREGISTER_EVENT(addemoji, static_cast<int>(EventType::addemoji))
     Q_MREGISTER_EVENT(loademoji, static_cast<int>(EventType::loademoji))
+    Q_MREGISTER_EVENT(loadmessage, static_cast<int>(EventType::loadmessage))
+    Q_MREGISTER_EVENT(loadset, static_cast<int>(EventType::loadset))
+    Q_MREGISTER_EVENT(requestaudio, static_cast<int>(EventType::requestaudio))
+    Q_MREGISTER_EVENT(requestfile, static_cast<int>(EventType::requestfile))
 
     // 方向枚举
     enum class DirectionType : char

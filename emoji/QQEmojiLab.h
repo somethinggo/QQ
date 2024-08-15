@@ -7,7 +7,7 @@
 #include <qpainter.h>
 #include <qpainterpath.h>
 
-#include "qqtheme.h"
+#include "qqglobal.h"
 
 class QQEmojiLab : public QLabel
 {

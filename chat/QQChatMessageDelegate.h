@@ -12,7 +12,8 @@
 #include <qpainterpath.h>
 #include <qfileinfo.h>
 
-#include "common/qqfunction.h"
+#include "qqglobal.h"
+#include "qqfunction.h"
 
 class QQChatMessageDelegate : public QStyledItemDelegate
 {

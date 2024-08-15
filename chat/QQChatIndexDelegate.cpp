@@ -14,8 +14,8 @@ QQChatIndexDelegate::~QQChatIndexDelegate()
 
 void QQChatIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    QQConfigs::UserFriend_C *user = qvariant_cast<QQConfigs::UserFriend_C *>(index.data(Qt::UserRole));
-    QQConfigs::UserGroup_C *group = qvariant_cast<QQConfigs::UserGroup_C *>(index.data(Qt::UserRole));
+    QQConfigs::FriendConfig *user = qvariant_cast<QQConfigs::FriendConfig *>(index.data(Qt::UserRole));
+    QQConfigs::GroupConfig *group = qvariant_cast<QQConfigs::GroupConfig *>(index.data(Qt::UserRole));
     painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
     if (user == nullptr && group == nullptr)
     {
@@ -80,18 +80,9 @@ void QQChatIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     int newMsgCount = index.data(Qt::UserRole + 6).toInt();
     if (newMsgCount <= 0)
     {
-        QIcon stateIcon = index.data(Qt::UserRole + 7).value<QIcon>();
-        if (option.state & QStyle::State_Selected)
-        {
-            painter->drawPixmap(stateRect, stateIcon.pixmap(stateRect.size(), QIcon::Normal, QIcon::On));
-        }
-        else
-        {
-            painter->drawPixmap(stateRect, stateIcon.pixmap(stateRect.size(), QIcon::Normal, QIcon::Off));
-        }
     }
-    else if (user != nullptr && user->m_state == QQConfigs::UserFriend_C::UserStateType::distrup ||
-             group != nullptr && group->m_state == QQConfigs::UserGroup_C::GroupStateType::disnotice)
+    else if (user != nullptr && user->m_state == QQConfigs::FriendConfig::UserStateType::distrup ||
+             group != nullptr && group->m_state == QQConfigs::GroupConfig::GroupStateType::disnotice)
     {
         painter->setFont(QQGlobals::g_theme->m_chat_index_count_font);
         painter->setBrush(Qt::gray);

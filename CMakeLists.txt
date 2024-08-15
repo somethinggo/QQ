@@ -141,11 +141,8 @@ target_compile_options(${PROJECT_NAME} PRIVATE -w)
 
 # 将外部依赖的二进制文件复制到生成目录--便于调试
 foreach(BINS_DIR ${PACKAGES_BINPATH})
-  file(GLOB_RECURSE BIN_FILES ${BINS_DIR}/*)
+  file(GLOB BIN_FILES ${BINS_DIR}/*)
   foreach(BIN_FILE ${BIN_FILES})
-    if(BIN_FILE STREQUAL "" OR NOT IS_FILE ${BIN_FILE})
-      continue()
-    endif()
     add_custom_command(
       TARGET ${PROJECT_NAME}
       POST_BUILD

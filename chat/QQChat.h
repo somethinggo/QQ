@@ -9,6 +9,7 @@
 #include <qdialogbuttonbox.h>
 #include <qtextobject.h>
 #include <qcombobox.h>
+#include <qmetaobject.h>
 #include <qfileiconprovider.h>
 #include <qproxystyle.h>
 
@@ -30,8 +31,10 @@
 #include <ElaMessageBar.h>
 
 #include "ui_QQChat.h"
+#include "qqwidget.h"
 #include "QQChatIndexDelegate.h"
 #include "QQChatMessageDelegate.h"
+#include "audio/QQAudio.h"
 #include "emoji/QQEmoji.h"
 
 QT_BEGIN_NAMESPACE
@@ -63,8 +66,6 @@ class QQChat : public QWidget
 public:
 	explicit QQChat(QWidget *parent = nullptr);
 	virtual ~QQChat();
-	void connectInit();
-	void loadingInformation();
 
 private:
 	Ui::QQChatClass *ui;
@@ -72,7 +73,6 @@ private:
 	QMSearchProxyStyle *m_searchStyle;
 	QAction *m_searchAction;
 	ElaMenu *m_searchMoreMenu;
-	QButtonGroup *m_buttonGroup;
 
 	/*
 	聊天索引列表模型,好友列表模型,群组列表模型--数据设置(以Qt::UserRole为基准)
@@ -122,32 +122,60 @@ protected:
 	bool event(QEvent *event) override;
 	bool eventFilter(QObject *watch, QEvent *event) override;
 
-private:																															 // 接收消息--主要是接收后台的消息,并且设置模型中的项的状态信息
-	void loadPeopleInModelItem(QStandardItem *item, QQConfigs::UserFriend_C *user);													 // 设置模型中的项的状态信息--主要是好友信息--好友体指针,好友索引窗口类型
-	void loadPeopleInModelItem(QStandardItem *item, QQConfigs::UserGroup_C *group);													 // 设置模型中的项的状态信息--主要是群组信息--群组体指针,群组索引窗口类型
-	void loadMessageInModelItem(QStandardItem *item, QSharedPointer<QQConfigs::MessageBaseConfig> &message, bool isReceive = false); // 设置模型中的项的状态信息--主要是消息信息--消息体指针,消息是否为接收的消息
-	void sendFileByName(QString &fileName);
-	void appendMessage(QSharedPointer<QQConfigs::MessageBaseConfig> &message, bool isUpdateData = true, int index = -1, bool isReceive = false); // 界面添加消息,选择更新数据--主要针对服务器的消息(向服务器发送的消息与接受来自服务器的消息),选择更新项索引,是否为接收的消息
-	void loadMessages(QQConfigs::UserFriend_C *user);																							 // 界面加载消息组,主要针对文件中的消息--主要是加载好友的消息
-	void loadMessages(QQConfigs::UserGroup_C *group);																							 // 界面加载消息组,主要针对文件中的消息--主要是加载群组的消息
+private:
+	/**
+	 * @brief 请求网络模块进行简单的非实时消息发送
+	 * @param message
+	 */
+	void sendMessageToNetWork(const QSharedPointer<QQConfigs::MessageConfig> &message);
+	/**
+	 * @brief 加载用户信息到聊天索引列表项中
+	 * @param item
+	 * @param user
+	 */
+	void loadPeopleInModelItem(QStandardItem *item, const QQConfigs::FriendConfig &user);
+	/**
+	 * @brief 加载群组信息到聊天索引列表项中
+	 * @param item
+	 * @param group
+	 */
+	void loadPeopleInModelItem(QStandardItem *item, const QQConfigs::GroupConfig &group);
+	/**
+	 * @brief 加载消息信息到聊天消息列表项中
+	 * @param item
+	 * @param message
+	 */
+	void loadMessageInModelItem(QStandardItem *item, const QSharedPointer<QQConfigs::MessageConfig> &message);
+	/**
+	 * @brief 通过文件名发送文件
+	 * @param fileName
+	 * @note 本质不发送文件，而是先更新界面，然后发送文件名到网络模块，网络模块发送文件
+	 */
+	void sendFileByName(const QString &fileName);
+	/**
+	 * @brief 向聊天消息列表中添加消息，主要是更新界面
+	 * @param message
+	 * @param index
+	 * @note 本质不发送消息，而是先更新界面，然后发送消息到网络模块，网络模块发送消息，其中由index区分是新消息还是历史消息
+	 * @note 如果是自己发送的消息,则发送给服务器--其余消息均重文件中加载(群聊与好友消息来源于服务器,下载到本地,系统消息与时间消息是由本地生成,存储于本地,不需要发送)
+	 */
+	void appendMessage(const QSharedPointer<QQConfigs::MessageConfig> &message, int index = -1);
+	void loadMessages(QQConfigs::FriendConfig *user);
+	void loadMessages(QQConfigs::GroupConfig *group);
 private slots:
-	void do_userClickSearchMoreButton();						// 用户点击搜索更多按钮
-	void do_userClickSearchMoreButtonAction(QAction *action);	// 用户点击搜索更多按钮选项
-	void do_userClickRightContextMenuAction(QAction *action);	// 用户点击聊天索引窗口右键菜单
-	void do_userClickChatIndex(const QModelIndex &index);		// 用户点击聊天索引窗口索引
-	void do_userClickSendEmojiButton();							// 用户点击发送表情按钮
-	void do_userClickSendEmojiButtonFile(const QString &emoji); // 用户点击具体发送表情
-	void do_userClickSendFileButton();							// 用户点击发送文件按钮
-	void do_userClickSendPictureButton();						// 用户点击发送图片按钮
-	void do_userOpenBigWriteButton(bool isChecked);				// 用户点击打开大写锁定
-	void do_userClickSetFontButton();							// 用户点击设置字体按钮
-	void do_userClickLookHistroyButton();						// 用户点击查看历史消息按钮
-	void do_limitUserInputTextCount();							// 限制用户文本输入的数量
-	void do_userClickSendAudioButton();							// 用户点击发送语音按钮
-	void do_userClickEscInAudioView();							// 用户点击退出语音界面
-	void do_userAudioDataOverTheLimit(int time);				// 用户输入的语音时长超限										  // 用户语音数据超过限制
-	void do_userClickClearInputButton();						// 用户点击清空输入按钮
-	void do_userClickSendMessageButton();						// 用户点击发送消息按钮
+	void do_userClickSearchMoreButton();
+	void do_userClickSearchMoreButtonAction(QAction *action);
+	void do_userClickRightContextMenuAction(QAction *action);
+	void do_userClickChatIndex(const QModelIndex &index);
+	void do_userClickSendEmojiButton();
+	void do_userClickSendFileButton();
+	void do_userClickSendPictureButton();
+	void do_userOpenBigWriteButton(bool isChecked);
+	void do_userClickLookHistroyButton();
+	void do_limitUserInputTextCount();
+	void do_userClickSendAudioButton();
+	void do_userClickClearInputButton();
+	void do_userClickSendMessageButton();
 };
 
 #endif // QQ_CHAT_CHAT_H

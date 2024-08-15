@@ -10,17 +10,17 @@ namespace QQFunctions
     {
     }
 
-    QQConfigs::UserFriend_C *getUserInfo(const QString &ID)
+    QQConfigs::FriendConfig *getUserInfo(const QString &ID)
     {
         return nullptr;
     }
 
-    QQConfigs::UserGroup_C *getGroupInfo(const QString &ID)
+    QQConfigs::GroupConfig *getGroupInfo(const QString &ID)
     {
         return nullptr;
     }
 
-    QPixmap getRounedPixmap(const QPixmap &src, int radius)
+    QPixmap getRoundedPixmap(const QPixmap &src, int radius)
     {
         if (src.isNull())
         {
@@ -41,7 +41,7 @@ namespace QQFunctions
         return pixmap;
     }
 
-    QString getCalculateText(const QString &text, const QFont &font, quint64 MAXW, bool elided = false)
+    QString getCalculateText(const QString &text, const QFont &font, quint64 MAXW, bool elided)
     {
         QFontMetrics fm(font);
         if (elided)
@@ -199,7 +199,7 @@ namespace QQFunctions
         return QQFunctions::getImageToBase64(QImage(fileName));
     }
 
-    QImage getBase64ToImage(const QString &base64, const QString &type)
+    QImage getBase64ToImage(const QString &base64)
     {
         QByteArray byteArray = QByteArray::fromBase64(base64.toUtf8());
         QImage image;

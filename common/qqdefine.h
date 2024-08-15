@@ -40,7 +40,12 @@ public:                                           \
 	}
 
 // 本地化类中枚举宏
-#define Q_MDECLARE_FLAGS(Class, Enum, Base, Config)                   \
+#define Q_MDECLARE_FLAGS(Class, Enum)                                 \
+	typedef struct Class : public Class{                              \
+							   Q_DECLARE_FLAGS(Enum##s, Enum)} Class; \
+	Q_DECLARE_OPERATORS_FOR_FLAGS(Class::Enum##s)
+
+#define Q_MDECLARE_FLAGS_BY_NAMESPACE(Class, Enum, Base, Config)      \
 	typedef struct Class : public Base::Class{                        \
 							   Q_DECLARE_FLAGS(Enum##s, Enum)} Class; \
 	Q_DECLARE_OPERATORS_FOR_FLAGS(Config::Class::Enum##s)
@@ -103,15 +108,24 @@ private:                                                                 \
 // 有可能有缺陷(可能会导致界面卡顿)
 #define Q_MSEND_EVENT(EventName, Data) \
 	QCoreApplication::postEvent(QCoreApplication::instance(), new EventName(Data));
+#define Q_MSEND_EVENT_BY_POINT(EventPoint) \
+	QCoreApplication::postEvent(QCoreApplication::instance(), EventPoint);
 #define Q_MSEND_EVENT_SINGLETON(EventName) \
 	EventName *_event = new EventName;     \
 	QCoreApplication::postEvent(QCoreApplication::instance(), _event);
-#define Q_MHANDLE_EVENT(EventName, Receiver, Handler)        \
+#define Q_MHANDLE_EVENT(EventName, Handler)                  \
 	case EventName::EventType:                               \
 	{                                                        \
 		EventName *_event = static_cast<EventName *>(event); \
-		Receiver->Handler(_event->data);                     \
+		Handler(_event->data);                               \
 		return true;                                         \
+	}
+#define Q_MHANDLE_EVENT_BY_RECEIVER(EventName, Receiver, Handler) \
+	case EventName::EventType:                                    \
+	{                                                             \
+		EventName *_event = static_cast<EventName *>(event);      \
+		Receiver->Handler(_event->data);                          \
+		return true;                                              \
 	}
 
 #endif // QQ_COMMON_DEFINE_H

@@ -8,6 +8,8 @@ QQAudio::QQAudio(QWidget *parent)
 	m_plan = fftw_plan_dft_r2c_1d(m_inputCache.size(), m_inputCache.data(), reinterpret_cast<fftw_complex *>(m_outputCache.data()), FFTW_ESTIMATE);
 	m_showData.resize(MAX_UI_DATA_SIZE, 0);
 
+	QApplication::instance()->installEventFilter(this);
+
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 	m_deviceInfo = QMediaDevices::defaultAudioInput();
 	m_format.setSampleFormat(QAudioFormat::Int16); // 默认使用16位bit深度
@@ -40,6 +42,16 @@ QQAudio::~QQAudio()
 	fftw_destroy_plan(m_plan);
 }
 
+bool QQAudio::event(QEvent *event)
+{
+	switch (event->type())
+	{
+		Q_MHANDLE_EVENT(QQEnums::sendaudio, QQAudio::respondRequest);
+	default:
+		return QWidget::event(event);
+	}
+}
+
 void QQAudio::keyPressEvent(QKeyEvent *event)
 {
 	if (event->key() == Qt::Key_Space)
@@ -70,7 +82,7 @@ void QQAudio::keyReleaseEvent(QKeyEvent *event)
 			this->update();
 			QByteArray amrData = getAuioPCMToAMR(m_audioData);
 			uint64_t duration = calculateAMRDuration(amrData);
-			if (duration < m_minTime || duration > m_maxTime)
+			if (duration < QQGlobals::AUDIO_MIN_TIME || duration > QQGlobals::AUDIO_MAX_TIME)
 			{
 				ElaMessageBar::warning(ElaMessageBarType::Bottom, QString(), QString::fromLocal8Bit("语音时长超过限制"), 3000);
 			}
@@ -82,6 +94,8 @@ void QQAudio::keyReleaseEvent(QKeyEvent *event)
 				sendData.insert("action", "sendaudio");
 				QJsonObject data;
 				data.insert("type", "amr");
+				data.insert("senderID", m_senderID);
+				data.insert("receiverID", m_receiverID);
 				data.insert("content", QString(amrData));
 				Q_MSEND_EVENT(QQEnums::sendaudio, QJsonDocument(data).toJson());
 			}
@@ -90,7 +104,7 @@ void QQAudio::keyReleaseEvent(QKeyEvent *event)
 	}
 	else if (event->key() == Qt::Key_Escape)
 	{
-		this->close();
+		respondClose();
 	}
 	return QWidget::keyReleaseEvent(event);
 }
@@ -151,6 +165,19 @@ void QQAudio::paintEvent(QPaintEvent *event)
 		rect.moveTopLeft(QPoint(this->width() / 2 - rect.width() / 2, this->height() / 2 + radius + 10));
 		painter.drawText(rect, Qt::AlignCenter, text);
 	}
+}
+
+void QQAudio::respondRequest(const QByteArray &data)
+{
+	QJsonObject receiveData = QJsonDocument::fromJson(data).object();
+	QJsonObject content = receiveData.value("data").toObject();
+	m_senderID = content.value("senderID").toString();
+	m_receiverID = content.value("receiverID").toString();
+}
+
+void QQAudio::respondClose()
+{
+	this->close();
 }
 
 void QQAudio::frequencyDomainByFFTW()

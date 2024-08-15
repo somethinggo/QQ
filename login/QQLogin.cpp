@@ -274,9 +274,9 @@ bool QQLogin::event(QEvent *event)
 {
 	switch (event->type())
 	{
-		Q_MHANDLE_EVENT(QQEnums::accpectlogin, this, login);
-		Q_MHANDLE_EVENT(QQEnums::accpectregistered, this, registered);
-		Q_MHANDLE_EVENT(QQEnums::accpectfindpassword, this, findPassword);
+		Q_MHANDLE_EVENT(QQEnums::accpectlogin, login);
+		Q_MHANDLE_EVENT(QQEnums::accpectregistered, registered);
+		Q_MHANDLE_EVENT(QQEnums::accpectfindpassword, findPassword);
 	default:
 		break;
 	}

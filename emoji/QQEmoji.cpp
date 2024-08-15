@@ -4,7 +4,7 @@ void QQEmojiProxyStyle::drawPrimitive(PrimitiveElement element, const QStyleOpti
 {
 	if (element == PE_Frame)
 	{
-		painter->setPen(QQThemes::DefaultTheme::getInstance()->g_line_color);
+		painter->setPen(QQGlobals::g_theme->g_line_color);
 		painter->drawLine(option->rect.bottomLeft(), option->rect.bottomRight());
 		return;
 	}
@@ -23,7 +23,7 @@ void QQEmojiProxyStyle::drawControl(ControlElement element, const QStyleOption *
 			painter->setRenderHint(QPainter::Antialiasing, true);
 			QPainterPath path;
 			path.addRoundedRect(option->rect, 10, 10);
-			painter->fillPath(path, QQThemes::DefaultTheme::getInstance()->m_emojiLab_hovered);
+			painter->fillPath(path, QQGlobals::g_theme->m_emojiLab_hovered);
 			painter->restore();
 		}
 		if (buttonOption && (buttonOption->state & State_Sunken))
@@ -34,7 +34,7 @@ void QQEmojiProxyStyle::drawControl(ControlElement element, const QStyleOption *
 			painter->setRenderHint(QPainter::Antialiasing, true);
 			QPainterPath path;
 			path.addRoundedRect(option->rect, 10, 10);
-			painter->fillPath(path, QQThemes::DefaultTheme::getInstance()->m_emojiLab_pressed);
+			painter->fillPath(path, QQGlobals::g_theme->m_emojiLab_pressed);
 			painter->restore();
 		}
 	}
@@ -69,10 +69,10 @@ QQEmoji::QQEmoji(QWidget *parent)
 	m_tabBar->setIconSize(QSize(30, 30));
 	m_tabBar->setMaxWidth(50);
 	m_tabBar->setContentsMargins(5, 0, 5, 0);
-	m_tabBar->setHoverColor(QQThemes::DefaultTheme::getInstance()->m_emoji_tabbar_hovered);
-	m_tabBar->setSelectColor(QQThemes::DefaultTheme::getInstance()->m_emoji_tabbar_pressed);
-	m_tabBar->addTab(QQThemes::DefaultTheme::getInstance()->m_emoji_tabbar_emoji_icon, QString());
-	m_tabBar->addTab(QQThemes::DefaultTheme::getInstance()->m_emoji_tabbar_like_icon, QString());
+	m_tabBar->setHoverColor(QQGlobals::g_theme->m_emoji_tabbar_hovered);
+	m_tabBar->setSelectColor(QQGlobals::g_theme->m_emoji_tabbar_pressed);
+	m_tabBar->addTab(QQGlobals::g_theme->m_emoji_tabbar_emoji_icon, QString());
+	m_tabBar->addTab(QQGlobals::g_theme->m_emoji_tabbar_like_icon, QString());
 
 	QHBoxLayout *optionLayout = new QHBoxLayout;
 	optionLayout->setContentsMargins(0, 5, 0, 5);
@@ -132,7 +132,7 @@ void QQEmoji::appendEmojiByUnicode(char32_t *start, int len, char32_t end)
 		}
 		QStandardItem *item = new QStandardItem;
 		QQEmojiLab *emojiLab = new QQEmojiLab(tableView);
-		emojiLab->setFont(QQThemes::DefaultTheme::getInstance()->m_emojiLab_unicode_font);
+		emojiLab->setFont(QQGlobals::g_theme->m_emojiLab_unicode_font);
 		emojiLab->setAlignment(Qt::AlignCenter);
 		emojiLab->setFixedSize(50, 50);
 		emojiLab->setText(emoji);
@@ -189,7 +189,7 @@ void QQEmoji::initEmojiView()
 	QPushButton *appendEmojiButton = new QPushButton(qobject_cast<QTableView *>(m_stackedWidget->widget(1)));
 	appendEmojiButton->setFixedSize(QSize(50, 50));
 	appendEmojiButton->setFlat(true);
-	appendEmojiButton->setIcon(QQThemes::DefaultTheme::getInstance()->m_emojiLab_append_icon);
+	appendEmojiButton->setIcon(QQGlobals::g_theme->m_emojiLab_append_icon);
 	appendEmojiButton->setIconSize(QSize(30, 30));
 	appendEmojiButton->setStyle(m_proxyStyle);
 	insertData(1, item);
@@ -211,7 +211,7 @@ bool QQEmoji::event(QEvent *event)
 {
 	switch (event->type())
 	{
-		Q_MHANDLE_EVENT(QQEnums::loademoji, this, loadEmojiData);
+		Q_MHANDLE_EVENT(QQEnums::loademoji, loadEmojiData);
 	default:
 		break;
 	}

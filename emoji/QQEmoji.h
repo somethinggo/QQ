@@ -24,7 +24,7 @@
 
 #include <ElaMessageBar.h>
 
-#include "qqfunction.h"
+#include "qqglobal.h"
 #include "qqwidget.h"
 #include "QQEmojiLab.h"
 
