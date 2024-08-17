@@ -21,7 +21,7 @@ void QQChatProxyStyle::drawControl(ControlElement element, const QStyleOption *o
 		QStyleOptionButton *buttonOption = const_cast<QStyleOptionButton *>(qstyleoption_cast<const QStyleOptionButton *>(option));
 		// 鼠标移入加深颜色，鼠标按下的颜色加深
 		if (name == "clearInputBtn" ||
-			name == "sendMessageBtn")
+			name == "seneMsgBtn")
 		{
 			if (buttonOption && (buttonOption->state & State_MouseOver))
 			{
@@ -181,12 +181,12 @@ QQChat::QQChat(QWidget *parent)
 	m_searchMoreMenu->addAction(QIcon(":/widget/common/images/widget/common/searchMoreOne.png"), QString::fromLocal8Bit("发起群聊"));
 	m_searchMoreMenu->addAction(QIcon(":/widget/common/images/widget/common/searchMoreTwo.png"), QString::fromLocal8Bit("加好友/群"));
 
-	m_chatListModel = new QStandardItemModel(this);
-	m_chatListDelegate = new QQChatIndexDelegate(this);
-	m_chatListDelegate->setItemSize(QSize(350, 90));
-	m_chatListDelegate->setMAXStringWidth(300);
-	m_messageModel = new QStandardItemModel(this);
-	m_chatMessageDelegate = new QQChatMessageDelegate(this);
+	m_indexListModel = new QStandardItemModel(this);
+	m_indexListDelegate = new QQChatIndexDelegate(this);
+	m_indexListDelegate->setItemSize(QSize(350, 90));
+	m_indexListDelegate->setMAXStringWidth(300);
+	m_messageListModel = new QStandardItemModel(this);
+	m_messageListDelegate = new QQChatMessageDelegate(this);
 	m_chatFriendContextMenu = new ElaMenu(this);
 	m_chatFriendContextMenu->addAction(ElaIcon::getInstance()->getElaIcon(ElaIconType::ArrowUp), QString::fromLocal8Bit("置顶"));
 	m_chatFriendContextMenu->addAction(ElaIcon::getInstance()->getElaIcon(ElaIconType::Ban), QString::fromLocal8Bit("消息免打扰"));
@@ -197,40 +197,40 @@ QQChat::QQChat(QWidget *parent)
 	ui->searchInput->addAction(m_searchAction, QLineEdit::LeadingPosition);
 	ui->searchMoreBtn->setStyle(m_searchStyle);
 	ui->searchMoreBtn->setMask(QQFunctions::getRoundedMask(ui->searchMoreBtn->size(), 5));
-	ui->indexList->setModel(m_chatListModel);
-	ui->indexList->setItemDelegate(m_chatListDelegate);
+	ui->indexList->setModel(m_indexListModel);
+	ui->indexList->setItemDelegate(m_indexListDelegate);
 	ui->nicknameLab->setStyle(m_commonStyle);
-	ui->messageList->setModel(m_messageModel);
-	ui->messageList->setItemDelegate(m_chatMessageDelegate);
+	ui->messageList->setModel(m_messageListModel);
+	ui->messageList->setItemDelegate(m_messageListDelegate);
 	ui->messageList->setStyle(m_commonStyle);
-	ui->normalInputOption->setStyle(m_commonStyle);
+	ui->inputOption->setStyle(m_commonStyle);
 	ui->emojiBtn->setStyle(m_commonStyle);
 	ui->fileBtn->setStyle(m_commonStyle);
 	ui->pictureBtn->setStyle(m_commonStyle);
 	ui->upperBtn->setStyle(m_commonStyle);
 	ui->histroyBtn->setStyle(m_commonStyle);
 	ui->textInput->setStyle(m_commonStyle);
-	ui->otherInputOption->setStyle(m_commonStyle);
+	ui->otherOption->setStyle(m_commonStyle);
 	ui->goToAudioTabBtn->setStyle(m_commonStyle);
 	ui->clearInputBtn->setMask(QQFunctions::getRoundedMask(ui->clearInputBtn->size(), 10));
 	ui->clearInputBtn->setStyle(m_commonStyle);
-	ui->sendMessageBtn->setMask(QQFunctions::getRoundedMask(ui->sendMessageBtn->size(), 10));
-	ui->sendMessageBtn->setStyle(m_commonStyle);
+	ui->sendMsgBtn->setMask(QQFunctions::getRoundedMask(ui->sendMsgBtn->size(), 10));
+	ui->sendMsgBtn->setStyle(m_commonStyle);
 
 	qApp->installEventFilter(this);
-	connect(ui->searchMoreBtn, &QPushButton::clicked, this, &QQChat::do_userClickSearchMoreButton);
-	connect(m_searchMoreMenu, &QMenu::triggered, this, &QQChat::do_userClickSearchMoreButtonAction);
+	connect(ui->searchMoreBtn, &QPushButton::clicked, this, &QQChat::do_userClickSearchMore);
+	connect(m_searchMoreMenu, &QMenu::triggered, this, &QQChat::do_userClickSearchMoreAction);
 	connect(ui->indexList, &QListView::clicked, this, &QQChat::do_userClickChatIndex);
-	connect(m_chatFriendContextMenu, &QMenu::triggered, this, &QQChat::do_userClickRightContextMenuAction);
-	connect(ui->emojiBtn, &QPushButton::clicked, this, &QQChat::do_userClickSendEmojiButton);
-	connect(ui->fileBtn, &QPushButton::clicked, this, &QQChat::do_userClickSendFileButton);
-	connect(ui->pictureBtn, &QPushButton::clicked, this, &QQChat::do_userClickSendPictureButton);
-	connect(ui->upperBtn, &QPushButton::toggled, this, &QQChat::do_userOpenBigWriteButton);
-	connect(ui->histroyBtn, &QPushButton::clicked, this, &QQChat::do_userClickLookHistroyButton);
+	connect(m_chatFriendContextMenu, &QMenu::triggered, this, &QQChat::do_userContextMenuAction);
+	connect(ui->emojiBtn, &QPushButton::clicked, this, &QQChat::do_userClickSendEmoji);
+	connect(ui->fileBtn, &QPushButton::clicked, this, &QQChat::do_userClickSendFile);
+	connect(ui->pictureBtn, &QPushButton::clicked, this, &QQChat::do_userClickSendPicture);
+	connect(ui->upperBtn, &QPushButton::toggled, this, &QQChat::do_userOpenBigWrite);
+	connect(ui->histroyBtn, &QPushButton::clicked, this, &QQChat::do_userClickLookHistroy);
 	connect(ui->textInput, &QTextEdit::textChanged, this, &QQChat::do_limitUserInputTextCount);
-	connect(ui->goToAudioTabBtn, &QPushButton::clicked, this, &QQChat::do_userClickSendAudioButton);
-	connect(ui->clearInputBtn, &QPushButton::clicked, this, &QQChat::do_userClickClearInputButton);
-	connect(ui->sendMessageBtn, &QPushButton::clicked, this, &QQChat::do_userClickSendMessageButton);
+	connect(ui->goToAudioTabBtn, &QPushButton::clicked, this, &QQChat::do_userClickSendAudio);
+	connect(ui->clearInputBtn, &QPushButton::clicked, this, &QQChat::do_userClickClearInput);
+	connect(ui->sendMsgBtn, &QPushButton::clicked, this, &QQChat::do_userClickSendMessage);
 }
 
 QQChat::~QQChat()
@@ -346,11 +346,11 @@ void QQChat::loadPeopleInModelItem(QStandardItem *item, const QQConfigs::FriendC
 	{
 		name = user.m_nickname;
 	}
-	name = QQFunctions::getCalculateText(name, QQGlobals::g_theme->m_chat_index_name_font, m_chatListDelegate->getItemSize().width() - 100, true);
+	name = QQFunctions::getCalculateText(name, QQGlobals::g_theme->m_chat_index_name_font, m_indexListDelegate->getItemSize().width() - 100, true);
 	item->setData(name, Qt::UserRole + 3);
 
 	QString lastMsg = user.m_lastMsg;
-	lastMsg = QQFunctions::getCalculateText(lastMsg, QQGlobals::g_theme->m_chat_index_message_font, m_chatListDelegate->getItemSize().width() - 100, true);
+	lastMsg = QQFunctions::getCalculateText(lastMsg, QQGlobals::g_theme->m_chat_index_message_font, m_indexListDelegate->getItemSize().width() - 100, true);
 	item->setData(lastMsg, Qt::UserRole + 4);
 
 	QString time = user.m_lastMsgTime.toString();
@@ -412,11 +412,11 @@ void QQChat::loadPeopleInModelItem(QStandardItem *item, const QQConfigs::GroupCo
 	{
 		name = group.m_nickname;
 	}
-	name = QQFunctions::getCalculateText(name, QQGlobals::g_theme->m_chat_index_name_font, m_chatListDelegate->getItemSize().width() - 100, true);
+	name = QQFunctions::getCalculateText(name, QQGlobals::g_theme->m_chat_index_name_font, m_indexListDelegate->getItemSize().width() - 100, true);
 	item->setData(group.m_lastMsg, Qt::UserRole + 4);
 
 	QString lastMsg = group.m_lastMsg;
-	lastMsg = QQFunctions::getCalculateText(lastMsg, QQGlobals::g_theme->m_chat_index_message_font, m_chatListDelegate->getItemSize().width() - 100, true);
+	lastMsg = QQFunctions::getCalculateText(lastMsg, QQGlobals::g_theme->m_chat_index_message_font, m_indexListDelegate->getItemSize().width() - 100, true);
 	item->setData(lastMsg, Qt::UserRole + 4);
 
 	QString time = group.m_lastMsgTime.toString();
@@ -655,7 +655,7 @@ void QQChat::appendMessage(const QSharedPointer<QQConfigs::MessageConfig> &messa
 	loadMessageInModelItem(item, message);
 	if (index == -1)
 	{
-		m_messageModel->insertRow(m_messageModel->rowCount() - 1, item);
+		m_messageListModel->insertRow(m_messageListModel->rowCount() - 1, item);
 		listView->scrollToBottom();
 		QModelIndex currentIndex = ui->indexList->currentIndex();
 		QQConfigs::FriendConfig *user = const_cast<QQConfigs::FriendConfig *>(qvariant_cast<QQConfigs::FriendConfig *>(currentIndex.data(Qt::UserRole)));
@@ -675,14 +675,14 @@ void QQChat::appendMessage(const QSharedPointer<QQConfigs::MessageConfig> &messa
 	}
 	else
 	{
-		m_messageModel->setItem(index, item);
+		m_messageListModel->setItem(index, item);
 	}
 }
 
 void QQChat::loadMessages(QQConfigs::FriendConfig *user)
 {
 	// 预分配空间
-	m_messageModel->insertRows(0, user->m_msgList.count());
+	m_messageListModel->insertRows(0, user->m_msgList.count());
 	for (int i = 0; i < user->m_msgList.count(); ++i)
 	{
 		int index = user->m_msgList.count() - i - 1;
@@ -694,7 +694,7 @@ void QQChat::loadMessages(QQConfigs::FriendConfig *user)
 void QQChat::loadMessages(QQConfigs::GroupConfig *group)
 {
 	// 预分配空间
-	m_messageModel->insertRows(0, group->m_msgList.count());
+	m_messageListModel->insertRows(0, group->m_msgList.count());
 	for (int i = 0; i < group->m_msgList.count(); ++i)
 	{
 		int index = group->m_msgList.count() - i - 1;
@@ -703,14 +703,14 @@ void QQChat::loadMessages(QQConfigs::GroupConfig *group)
 	}
 }
 
-void QQChat::do_userClickSearchMoreButton()
+void QQChat::do_userClickSearchMore()
 {
 	QPoint pos = qobject_cast<QPushButton *>(sender())->mapToGlobal(QPoint(0, 0));
 	QPoint searchMoreMenuPos = pos + QPoint(5, qobject_cast<QPushButton *>(sender())->height());
 	m_searchMoreMenu->popup(searchMoreMenuPos);
 }
 
-void QQChat::do_userClickSearchMoreButtonAction(QAction *action)
+void QQChat::do_userClickSearchMoreAction(QAction *action)
 {
 	if (action == m_searchMoreMenu->actions()[0])
 	{
@@ -720,12 +720,12 @@ void QQChat::do_userClickSearchMoreButtonAction(QAction *action)
 	}
 }
 
-void QQChat::do_userClickRightContextMenuAction(QAction *action)
+void QQChat::do_userContextMenuAction(QAction *action)
 {
 	QModelIndex index = ui->indexList->indexAt(QCursor::pos());
 	if (action == m_chatFriendContextMenu->actions()[0])
 	{
-		m_chatListModel->insertRow(0, m_chatListModel->takeRow(index.row())[0]);
+		m_indexListModel->insertRow(0, m_indexListModel->takeRow(index.row())[0]);
 	}
 	else if (action == m_chatFriendContextMenu->actions()[1])
 	{
@@ -767,9 +767,9 @@ void QQChat::do_userClickRightContextMenuAction(QAction *action)
 			ui->indexList->selectionModel()->clear();
 			ui->chatStackWidget->setCurrentIndex(0);
 		};
-		m_chatListModel->removeRow(index.row());
+		m_indexListModel->removeRow(index.row());
 		// 如果没有聊天索引,则隐藏聊天界面
-		if (m_chatListModel->rowCount() == 0)
+		if (m_indexListModel->rowCount() == 0)
 		{
 			ui->chatStackWidget->setCurrentIndex(0);
 			ui->indexStackWidget->setCurrentIndex(0);
@@ -849,16 +849,16 @@ void QQChat::do_userClickChatIndex(const QModelIndex &index)
 	if (user != nullptr)
 	{
 		user->m_newMsgCount = 0;
-		m_chatListModel->itemFromIndex(index)->setData(0, Qt::UserRole + 6);
+		m_indexListModel->itemFromIndex(index)->setData(0, Qt::UserRole + 6);
 		ui->nicknameLab->setText(user->m_nickname);
 	}
 	else if (group != nullptr)
 	{
 		group->m_newMsgCount = 0;
-		m_chatListModel->itemFromIndex(index)->setData(0, Qt::UserRole + 6);
+		m_indexListModel->itemFromIndex(index)->setData(0, Qt::UserRole + 6);
 		ui->nicknameLab->setText(group->m_nickname);
 	}
-	m_messageModel->clear();
+	m_messageListModel->clear();
 	if (user != nullptr)
 	{
 		loadMessages(user);
@@ -871,14 +871,14 @@ void QQChat::do_userClickChatIndex(const QModelIndex &index)
 	QStandardItem *item = new QStandardItem;
 	int width = ui->messageList->width();
 	item->setSizeHint(QSize(width, 25));
-	m_messageModel->appendRow(item);
-	m_haveInChatList.insert(user->m_ID, m_chatListModel->itemFromIndex(index));
+	m_messageListModel->appendRow(item);
+	m_haveInChatList.insert(user->m_ID, m_indexListModel->itemFromIndex(index));
 	QTimer::singleShot(50, [this]
 					   { ui->messageList->scrollToBottom(); });
 	m_activeChatIndex = index;
 }
 
-void QQChat::do_userClickSendEmojiButton()
+void QQChat::do_userClickSendEmoji()
 {
 	QPoint pos = ui->emojiBtn->mapToGlobal(QPoint(0, 0));
 	pos.setY(pos.y() - QQEmoji::getInstance()->height() - 10);
@@ -886,13 +886,13 @@ void QQChat::do_userClickSendEmojiButton()
 	QQEmoji::getInstance()->show();
 }
 
-void QQChat::do_userClickSendFileButton()
+void QQChat::do_userClickSendFile()
 {
 	QString fileName = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("选择文件"), "C:/", QString::fromLocal8Bit("所有文件(*.*)"));
 	sendFileByName(fileName);
 }
 
-void QQChat::do_userClickSendPictureButton()
+void QQChat::do_userClickSendPicture()
 {
 	// 判断是为了判断用户的图片状态是否正常,文件是单独的判读
 	QString fileName = QFileDialog::getOpenFileName(this, QString::fromLocal8Bit("选择图片"), "C:/", QString::fromLocal8Bit("图片文件(*.png *.jpg *.bmp)"));
@@ -952,7 +952,7 @@ void QQChat::do_userClickSendPictureButton()
 	appendMessage(message);
 }
 
-void QQChat::do_userOpenBigWriteButton(bool isChecked)
+void QQChat::do_userOpenBigWrite(bool isChecked)
 {
 	// 暂时无法判断是否打开大写锁定--win是可以的,linux与mac无法判断
 #ifdef Q_OS_WIN
@@ -988,7 +988,7 @@ void QQChat::do_userOpenBigWriteButton(bool isChecked)
 #endif
 }
 
-void QQChat::do_userClickLookHistroyButton()
+void QQChat::do_userClickLookHistroy()
 {
 }
 
@@ -1024,7 +1024,7 @@ void QQChat::do_limitUserInputTextCount()
 	}
 }
 
-void QQChat::do_userClickSendAudioButton()
+void QQChat::do_userClickSendAudio()
 {
 	QPoint pos = this->mapToGlobal(QPoint(0, 0));
 	QWidget *audio = QQAudio::getInstance();
@@ -1051,14 +1051,14 @@ void QQChat::do_userClickSendAudioButton()
 	Q_MSEND_EVENT(QQEnums::requestaudio, QJsonDocument(sendData).toJson());
 }
 
-void QQChat::do_userClickClearInputButton()
+void QQChat::do_userClickClearInput()
 {
 	// 清除输入框的内容,并设置焦点
 	ui->textInput->clear();
 	ui->textInput->setFocus();
 }
 
-void QQChat::do_userClickSendMessageButton()
+void QQChat::do_userClickSendMessage()
 {
 	if (ui->textInput->toPlainText() == "")
 	{

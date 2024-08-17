@@ -45,6 +45,7 @@ namespace QQEnums
         loadset,
         requestaudio,
         requestfile,
+        requestchat,
     };
     Q_MREGISTER_EVENT(login, static_cast<int>(EventType::login))
     Q_MREGISTER_EVENT(logout, static_cast<int>(EventType::logout))
@@ -71,6 +72,7 @@ namespace QQEnums
     Q_MREGISTER_EVENT(loadset, static_cast<int>(EventType::loadset))
     Q_MREGISTER_EVENT(requestaudio, static_cast<int>(EventType::requestaudio))
     Q_MREGISTER_EVENT(requestfile, static_cast<int>(EventType::requestfile))
+    Q_MREGISTER_EVENT(requestchat, static_cast<int>(EventType::requestchat))
 
     // 方向枚举
     enum class DirectionType : char
@@ -108,21 +110,21 @@ namespace QQEnums
     Q_MDECLARE_OPERATORS_FOR_FLAGS(FileSizeTypes)
 
     // 信息的位置枚举
-    enum class InformationPostionType : char
+    enum class InfoPostionType : char
     {
         left,
         bottom
     };
     // 信息的类型枚举
-    enum class InformationWidgetType : char
+    enum class InfoWidgetType : char
     {
         icon = 0x01,
         label = 0x02,
         widget = 0x04,
         all = icon | label | widget
     };
-    Q_DECLARE_FLAGS(InformationWidgetTypes, InformationWidgetType)
-    Q_MDECLARE_OPERATORS_FOR_FLAGS(InformationWidgetTypes)
+    Q_DECLARE_FLAGS(InfoWidgetTypes, InfoWidgetType)
+    Q_MDECLARE_OPERATORS_FOR_FLAGS(InfoWidgetTypes)
 
     // 标题栏的类型枚举
     enum class AppBarHintType : char
@@ -146,18 +148,6 @@ namespace QQEnums
     };
     Q_DECLARE_FLAGS(EmojiTypes, EmojiType)
     Q_MDECLARE_OPERATORS_FOR_FLAGS(EmojiTypes)
-
-    // 索引的类型枚举
-    enum class PeopleWidgetType : char
-    {
-        friendchats,
-        groupchats,
-        friends,
-        groups,
-        friendappend,
-        groupappend
-    };
-    Q_ENUM_NS(PeopleWidgetType)
 }
 
 #endif

@@ -6,17 +6,17 @@
 #include <qevent.h>
 
 template <class T>
-class QMSingleton
+class QQSingleton
 {
 public:
 	static T *getInstance();
 
 private:
-	Q_DISABLE_COPY_MOVE(QMSingleton)
+	Q_DISABLE_COPY_MOVE(QQSingleton)
 };
 
 template <class T>
-T *QMSingleton<T>::getInstance()
+T *QQSingleton<T>::getInstance()
 {
 	static QMutex mutex;
 	QMutexLocker lock(&mutex);
@@ -31,12 +31,12 @@ T *QMSingleton<T>::getInstance()
 // 类转化单例宏
 #define Q_MSINGLETON_CREATE(Class)                \
 private:                                          \
-	friend class QMSingleton<Class>;              \
+	friend class QQSingleton<Class>;              \
                                                   \
 public:                                           \
 	static Class *getInstance()                   \
 	{                                             \
-		return QMSingleton<Class>::getInstance(); \
+		return QQSingleton<Class>::getInstance(); \
 	}
 
 // 本地化类中枚举宏

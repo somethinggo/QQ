@@ -330,7 +330,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="indexNULLTab">
         <layout class="QVBoxLayout" name="verticalLayout_19">
@@ -350,7 +350,7 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="QLabel" name="indexNULLInformation">
+          <widget class="QLabel" name="indexNULLLab">
            <property name="palette">
             <palette>
              <active>
@@ -460,7 +460,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="indexNOTNULLTab">
+       <widget class="QWidget" name="indexTab">
         <layout class="QVBoxLayout" name="verticalLayout_17">
          <property name="spacing">
           <number>0</number>
@@ -556,7 +556,7 @@
    <item>
     <widget class="QStackedWidget" name="chatStackWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="chatNULLTab">
       <layout class="QVBoxLayout" name="verticalLayout_18">
@@ -576,7 +576,7 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QLabel" name="chatNULLInformation">
+        <widget class="QLabel" name="chatNULLLab">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -663,7 +663,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="chatNOTNULLTab">
+     <widget class="QWidget" name="chatTab">
       <property name="palette">
        <palette>
         <active>
@@ -801,7 +801,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="normalInputTab" native="true">
+        <widget class="QWidget" name="inputWidget" native="true">
          <layout class="QVBoxLayout" name="verticalLayout">
           <property name="spacing">
            <number>0</number>
@@ -819,7 +819,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QGroupBox" name="normalInputOption">
+           <widget class="QGroupBox" name="inputOption">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -1113,7 +1113,7 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="otherInputOption">
+           <widget class="QGroupBox" name="otherOption">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -1311,7 +1311,7 @@ p, li { white-space: pre-wrap; }
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="sendMessageBtn">
+              <widget class="QPushButton" name="sendMsgBtn">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                  <horstretch>0</horstretch>

@@ -62,7 +62,6 @@ public:
 class QQChat : public QWidget
 {
 	Q_OBJECT
-
 public:
 	explicit QQChat(QWidget *parent = nullptr);
 	virtual ~QQChat();
@@ -89,8 +88,8 @@ private:
 	6:未读消息数量--好友聊天显示未读消息数量--群组显示未读消息数量--其它无该项
 	7:免打扰设置--好友聊天显示免打扰设置--群组显示免打扰设置--其它无该项
 	*/
-	QStandardItemModel *m_chatListModel;	 // 聊天索引列表数据模型
-	QQChatIndexDelegate *m_chatListDelegate; // 聊天索引列表信息的样式代理
+	QStandardItemModel *m_indexListModel;	  // 聊天索引列表数据模型
+	QQChatIndexDelegate *m_indexListDelegate; // 聊天索引列表信息的样式代理
 	/*
 	消息模型--数据设置(以Qt::UserRole为基准)
 	0:消息体指针
@@ -112,8 +111,8 @@ private:
 	--只有文件消息才有下载状态,文件中已下载的设置为已下载,文件中未下载的设置为未下载,其它消息设置为下载中
 	7:下载进度--下载进度条--界面只显示下载进度条 消息体中不维护下载进度条--只有文件消息才有下载进度
 	*/
-	QStandardItemModel *m_messageModel;					 // 聊天消息数据模型
-	QQChatMessageDelegate *m_chatMessageDelegate;		 // 聊天消息的样式代理
+	QStandardItemModel *m_messageListModel;				 // 聊天消息数据模型
+	QQChatMessageDelegate *m_messageListDelegate;		 // 聊天消息的样式代理
 	ElaMenu *m_chatFriendContextMenu;					 // 聊天索引列表的右键菜单--数据源是friend
 	ElaMenu *m_chatGroupContextMenu;					 // 聊天索引列表的右键菜单--数据源是group
 	QModelIndex m_activeChatIndex;						 // 当前活动的聊天索引--主要是为了控制消息的显示
@@ -163,19 +162,19 @@ private:
 	void loadMessages(QQConfigs::FriendConfig *user);
 	void loadMessages(QQConfigs::GroupConfig *group);
 private slots:
-	void do_userClickSearchMoreButton();
-	void do_userClickSearchMoreButtonAction(QAction *action);
-	void do_userClickRightContextMenuAction(QAction *action);
+	void do_userClickSearchMore();
+	void do_userClickSearchMoreAction(QAction *action);
+	void do_userContextMenuAction(QAction *action);
 	void do_userClickChatIndex(const QModelIndex &index);
-	void do_userClickSendEmojiButton();
-	void do_userClickSendFileButton();
-	void do_userClickSendPictureButton();
-	void do_userOpenBigWriteButton(bool isChecked);
-	void do_userClickLookHistroyButton();
+	void do_userClickSendEmoji();
+	void do_userClickSendFile();
+	void do_userClickSendPicture();
+	void do_userOpenBigWrite(bool isChecked);
+	void do_userClickLookHistroy();
 	void do_limitUserInputTextCount();
-	void do_userClickSendAudioButton();
-	void do_userClickClearInputButton();
-	void do_userClickSendMessageButton();
+	void do_userClickSendAudio();
+	void do_userClickClearInput();
+	void do_userClickSendMessage();
 };
 
 #endif // QQ_CHAT_CHAT_H
