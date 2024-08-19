@@ -16,7 +16,7 @@
 class QQFriendInfo : public QWidget
 {
 	Q_OBJECT
-	Q_MSINGLETON_CREATE(QQFriendInfo)
+	QQ_SINGLETON_CREATE(QQFriendInfo)
 private:
 	explicit QQFriendInfo(QWidget *parent = nullptr);
 	virtual ~QQFriendInfo();

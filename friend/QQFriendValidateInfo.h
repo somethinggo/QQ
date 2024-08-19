@@ -16,7 +16,7 @@
 class QQFriendValidateInfo : public QWidget
 {
 	Q_OBJECT
-	Q_MSINGLETON_CREATE(QQFriendValidateInfo)
+	QQ_SINGLETON_CREATE(QQFriendValidateInfo)
 private:
 	explicit QQFriendValidateInfo(QWidget *parent = nullptr);
 	virtual ~QQFriendValidateInfo();

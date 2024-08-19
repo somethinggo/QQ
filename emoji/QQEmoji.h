@@ -38,7 +38,7 @@ public:
 class QQEmoji : public QDialog
 {
 	Q_OBJECT
-	Q_MSINGLETON_CREATE(QQEmoji)
+	QQ_SINGLETON_CREATE(QQEmoji)
 private:
 	explicit QQEmoji(QWidget *parent = nullptr);
 	virtual ~QQEmoji();

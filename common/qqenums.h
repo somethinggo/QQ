@@ -11,12 +11,12 @@
 namespace QQEnums
 {
     Q_NAMESPACE
+    using namespace QQBaseConfigs;
     // 本地化枚举值
-    Q_MDECLARE_FLAGS_BY_NAMESPACE(UserBaseConfig, UserStateType, QQBaseConfigs, QQEnums)
-    Q_MDECLARE_FLAGS_BY_NAMESPACE(GroupBaseConfig, GroupStateType, QQBaseConfigs, QQEnums)
-    Q_MDECLARE_FLAGS_BY_NAMESPACE(MessageBaseConfig, MessageType, QQBaseConfigs, QQEnums)
-    Q_MDECLARE_FLAGS_BY_NAMESPACE(DynamicBaseConfig, DynamicType, QQBaseConfigs, QQEnums)
-
+    QQ_DECLARE_FLAGS(UserBaseConfig, UserStateType)
+    QQ_DECLARE_FLAGS(GroupBaseConfig, GroupStateType)
+    QQ_DECLARE_FLAGS(MessageBaseConfig, MessageType)
+    QQ_DECLARE_FLAGS(DynamicBaseConfig, DynamicType)
     // 事件枚举
     enum class EventType
     {
@@ -47,32 +47,32 @@ namespace QQEnums
         requestfile,
         requestchat,
     };
-    Q_MREGISTER_EVENT(login, static_cast<int>(EventType::login))
-    Q_MREGISTER_EVENT(logout, static_cast<int>(EventType::logout))
-    Q_MREGISTER_EVENT(registered, static_cast<int>(EventType::registered))
-    Q_MREGISTER_EVENT(findpassword, static_cast<int>(EventType::findpassword))
-    Q_MREGISTER_EVENT(accpectlogin, static_cast<int>(EventType::accpectlogin))
-    Q_MREGISTER_EVENT(accpectlogout, static_cast<int>(EventType::accpectlogout))
-    Q_MREGISTER_EVENT(accpectregistered, static_cast<int>(EventType::accpectregistered))
-    Q_MREGISTER_EVENT(accpectfindpassword, static_cast<int>(EventType::accpectfindpassword))
-    Q_MREGISTER_EVENT(sendtext, static_cast<int>(EventType::sendtext))
-    Q_MREGISTER_EVENT(sendimage, static_cast<int>(EventType::sendimage))
-    Q_MREGISTER_EVENT(sendlink, static_cast<int>(EventType::sendlink))
-    Q_MREGISTER_EVENT(sendemoji, static_cast<int>(EventType::sendemoji))
-    Q_MREGISTER_EVENT(sendaudio, static_cast<int>(EventType::sendaudio))
-    Q_MREGISTER_EVENT(sendfile, static_cast<int>(EventType::sendfile))
-    Q_MREGISTER_EVENT(sendreport, static_cast<int>(EventType::sendreport))
-    Q_MREGISTER_EVENT(searchfriend, static_cast<int>(EventType::searchfriend))
-    Q_MREGISTER_EVENT(searchgroup, static_cast<int>(EventType::searchgroup))
-    Q_MREGISTER_EVENT(addfriend, static_cast<int>(EventType::addfriend))
-    Q_MREGISTER_EVENT(addgroup, static_cast<int>(EventType::addgroup))
-    Q_MREGISTER_EVENT(addemoji, static_cast<int>(EventType::addemoji))
-    Q_MREGISTER_EVENT(loademoji, static_cast<int>(EventType::loademoji))
-    Q_MREGISTER_EVENT(loadmessage, static_cast<int>(EventType::loadmessage))
-    Q_MREGISTER_EVENT(loadset, static_cast<int>(EventType::loadset))
-    Q_MREGISTER_EVENT(requestaudio, static_cast<int>(EventType::requestaudio))
-    Q_MREGISTER_EVENT(requestfile, static_cast<int>(EventType::requestfile))
-    Q_MREGISTER_EVENT(requestchat, static_cast<int>(EventType::requestchat))
+    QQ_REGISTER_EVENT(login, static_cast<int>(EventType::login))
+    QQ_REGISTER_EVENT(logout, static_cast<int>(EventType::logout))
+    QQ_REGISTER_EVENT(registered, static_cast<int>(EventType::registered))
+    QQ_REGISTER_EVENT(findpassword, static_cast<int>(EventType::findpassword))
+    QQ_REGISTER_EVENT(accpectlogin, static_cast<int>(EventType::accpectlogin))
+    QQ_REGISTER_EVENT(accpectlogout, static_cast<int>(EventType::accpectlogout))
+    QQ_REGISTER_EVENT(accpectregistered, static_cast<int>(EventType::accpectregistered))
+    QQ_REGISTER_EVENT(accpectfindpassword, static_cast<int>(EventType::accpectfindpassword))
+    QQ_REGISTER_EVENT(sendtext, static_cast<int>(EventType::sendtext))
+    QQ_REGISTER_EVENT(sendimage, static_cast<int>(EventType::sendimage))
+    QQ_REGISTER_EVENT(sendlink, static_cast<int>(EventType::sendlink))
+    QQ_REGISTER_EVENT(sendemoji, static_cast<int>(EventType::sendemoji))
+    QQ_REGISTER_EVENT(sendaudio, static_cast<int>(EventType::sendaudio))
+    QQ_REGISTER_EVENT(sendfile, static_cast<int>(EventType::sendfile))
+    QQ_REGISTER_EVENT(sendreport, static_cast<int>(EventType::sendreport))
+    QQ_REGISTER_EVENT(searchfriend, static_cast<int>(EventType::searchfriend))
+    QQ_REGISTER_EVENT(searchgroup, static_cast<int>(EventType::searchgroup))
+    QQ_REGISTER_EVENT(addfriend, static_cast<int>(EventType::addfriend))
+    QQ_REGISTER_EVENT(addgroup, static_cast<int>(EventType::addgroup))
+    QQ_REGISTER_EVENT(addemoji, static_cast<int>(EventType::addemoji))
+    QQ_REGISTER_EVENT(loademoji, static_cast<int>(EventType::loademoji))
+    QQ_REGISTER_EVENT(loadmessage, static_cast<int>(EventType::loadmessage))
+    QQ_REGISTER_EVENT(loadset, static_cast<int>(EventType::loadset))
+    QQ_REGISTER_EVENT(requestaudio, static_cast<int>(EventType::requestaudio))
+    QQ_REGISTER_EVENT(requestfile, static_cast<int>(EventType::requestfile))
+    QQ_REGISTER_EVENT(requestchat, static_cast<int>(EventType::requestchat))
 
     // 方向枚举
     enum class DirectionType : char
@@ -95,7 +95,7 @@ namespace QQEnums
         all = top | bottom,
     };
     Q_DECLARE_FLAGS(RoundPostionTypes, RoundPostionType)
-    Q_MDECLARE_OPERATORS_FOR_FLAGS(RoundPostionTypes)
+    QQ_DECLARE_OPERATORS_FOR_FLAGS(RoundPostionTypes)
 
     // 文件的大小单位枚举
     enum class FileSizeType : char
@@ -107,7 +107,7 @@ namespace QQEnums
         TB
     };
     Q_DECLARE_FLAGS(FileSizeTypes, FileSizeType)
-    Q_MDECLARE_OPERATORS_FOR_FLAGS(FileSizeTypes)
+    QQ_DECLARE_OPERATORS_FOR_FLAGS(FileSizeTypes)
 
     // 信息的位置枚举
     enum class InfoPostionType : char
@@ -124,7 +124,7 @@ namespace QQEnums
         all = icon | label | widget
     };
     Q_DECLARE_FLAGS(InfoWidgetTypes, InfoWidgetType)
-    Q_MDECLARE_OPERATORS_FOR_FLAGS(InfoWidgetTypes)
+    QQ_DECLARE_OPERATORS_FOR_FLAGS(InfoWidgetTypes)
 
     // 标题栏的类型枚举
     enum class AppBarHintType : char
@@ -137,7 +137,7 @@ namespace QQEnums
         DialogHint = CloseButtonHint
     };
     Q_DECLARE_FLAGS(AppBarHintTypes, AppBarHintType)
-    Q_MDECLARE_OPERATORS_FOR_FLAGS(AppBarHintTypes)
+    QQ_DECLARE_OPERATORS_FOR_FLAGS(AppBarHintTypes)
 
     // 表情的类型枚举
     enum class EmojiType : char
@@ -147,7 +147,7 @@ namespace QQEnums
         gif
     };
     Q_DECLARE_FLAGS(EmojiTypes, EmojiType)
-    Q_MDECLARE_OPERATORS_FOR_FLAGS(EmojiTypes)
+    QQ_DECLARE_OPERATORS_FOR_FLAGS(EmojiTypes)
 }
 
 #endif

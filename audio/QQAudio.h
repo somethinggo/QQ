@@ -49,7 +49,7 @@ extern "C"
 class QQAudio : public QWidget
 {
 	Q_OBJECT
-	Q_MSINGLETON_CREATE(QQAudio)
+	QQ_SINGLETON_CREATE(QQAudio)
 public:
 	explicit QQAudio(QWidget *parent = nullptr);
 	virtual ~QQAudio();

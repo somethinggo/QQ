@@ -14,9 +14,9 @@
     </thead>
     <tbody>
         <tr>
-            <td><code>Q_MSINGLETON_CREATE(Class)</code></td>
+            <td><code>QQ_SINGLETON_CREATE(Class)</code></td>
             <td>实现类的单例模式，确保程序中只有一个该类的实例。</td>
-            <td><pre><code>class MyClass {<br>public:<br>    static MyClass& instance() {<br>        static MyClass instance;<br>        return instance;<br>    }<br>private:<br>    MyClass() {} // Constructor is private<br>    Q_MSINGLETON_CREATE(MyClass)<br>};</code></pre></td>
+            <td><pre><code>class MyClass {<br>public:<br>    static MyClass& instance() {<br>        static MyClass instance;<br>        return instance;<br>    }<br>private:<br>    MyClass() {} // Constructor is private<br>    QQ_SINGLETON_CREATE(MyClass)<br>};</code></pre></td>
         </tr>
         <tr>
             <td><code>Q_MDECLARE_FLAGS(Class, Enum, Base, Config)</code></td>
@@ -24,14 +24,14 @@
             <td><pre><code>class MyClass {<br>    Q_MDECLARE_FLAGS(MyClass, MyEnum, int, MyConfig)<br>};</code></pre></td>
         </tr>
         <tr>
-            <td><code>Q_MDECLARE_OPERATORS_FOR_FLAGS(Flags)</code></td>
+            <td><code>QQ_DECLARE_OPERATORS_FOR_FLAGS(Flags)</code></td>
             <td>为强类型枚举定义位操作符，如取反、与、或、异或等。</td>
-            <td><pre><code>enum class MyFlags : int {<br>    Flag1 = 1 << 0,<br>    Flag2 = 1 << 1<br>};<br>Q_MDECLARE_OPERATORS_FOR_FLAGS(MyFlags)</code></pre></td>
+            <td><pre><code>enum class MyFlags : int {<br>    Flag1 = 1 << 0,<br>    Flag2 = 1 << 1<br>};<br>QQ_DECLARE_OPERATORS_FOR_FLAGS(MyFlags)</code></pre></td>
         </tr>
         <tr>
-            <td><code>Q_MPROPERTY_CREATE(Type, FunctionName, Name)</code></td>
+            <td><code>QQ_PROPERTY_CREATE(Type, FunctionName, Name)</code></td>
             <td>快速创建类的属性，包括 getter 和 setter 函数，以及 `Q_PROPERTY` 声明。</td>
-            <td><pre><code>class MyClass {<br>    Q_MPROPERTY_CREATE(int, getValue, value)<br>private:<br>    int value;<br>};</code></pre></td>
+            <td><pre><code>class MyClass {<br>    QQ_PROPERTY_CREATE(int, getValue, value)<br>private:<br>    int value;<br>};</code></pre></td>
         </tr>
         <tr>
             <td><code>Q_MREGISTER_EVENT(EventName, Number)</code></td>
@@ -39,14 +39,14 @@
             <td><pre><code>Q_MREGISTER_EVENT(MyEvent, 1234)</code></pre></td>
         </tr>
         <tr>
-            <td><code>Q_MSEND_EVENT(EventName, Data)</code></td>
+            <td><code>QQ_SEND_EVENT(EventName, Data)</code></td>
             <td>将事件异步发送到主线程的事件循环中。</td>
-            <td><pre><code>Q_MSEND_EVENT(MyEvent, myData)</code></pre></td>
+            <td><pre><code>QQ_SEND_EVENT(MyEvent, myData)</code></pre></td>
         </tr>
         <tr>
-            <td><code>Q_MHANDLE_EVENT(EventName, Receiver, Handler)</code></td>
+            <td><code>QQ_HANDLE_EVENT(EventName, Receiver, Handler)</code></td>
             <td>在事件处理函数中快速匹配并处理指定事件类型。</td>
-            <td><pre><code>Q_MHANDLE_EVENT(MyEvent, myReceiver, myHandler)</code></pre></td>
+            <td><pre><code>QQ_HANDLE_EVENT(MyEvent, myReceiver, myHandler)</code></pre></td>
         </tr>
     </tbody>
 </table>
@@ -458,6 +458,7 @@
 
 ## **全局样式设定**
 >namespace(QQThemes)
+
 | 属性名称                    |   类型   | 用途描述                                                |
 | :-------------------------- | :------: | ------------------------------------------------------- |
 | `g_font`                    | `QFont`  | 应用程序全局使用的默认字体。                            |

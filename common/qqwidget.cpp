@@ -16,8 +16,8 @@ namespace QQWidgets
 
         m_wid = this->window()->winId();
         m_margin = 5;
-        m_isAllowDrag = true;
-        m_isAllowResize = true;
+        setIsAllowDrag(true);
+        setIsAllowResize(true);
         m_iconLabel = new QLabel(this);
         m_iconLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         m_titleLabel = new QLabel(this);
@@ -30,10 +30,12 @@ namespace QQWidgets
         this->setLayout(layout);
         setWindowsFlags(m_types);
 
+#ifdef Q_OS_WIN
         HWND hwnd = reinterpret_cast<HWND>(this->window()->winId());
         DWORD style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
         ::SetWindowLongPtr(hwnd, GWL_STYLE, style | WS_MAXIMIZEBOX | WS_THICKFRAME);
         SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+#endif
     }
 
     AppBar::~AppBar()
@@ -144,8 +146,7 @@ namespace QQWidgets
 #endif
     {
 #ifdef Q_OS_WIN
-
-        if (message == nullptr)
+        if ((eventType != "windows_generic_MSG") || !message)
         {
             return false;
         }
@@ -209,7 +210,7 @@ namespace QQWidgets
         case WM_NCHITTEST:
         {
             // 获取鼠标位置,转换为客户区坐标,计算边界用于大小调整
-            if (m_isAllowResize)
+            if (getIsAllowResize())
             {
                 POINT nativeLocalPos{GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
                 ::ScreenToClient(hwnd, &nativeLocalPos);
@@ -273,13 +274,56 @@ namespace QQWidgets
         // 鼠标左键按下时,移动窗口
         case WM_LBUTTONDOWN:
         {
-            if (m_isAllowDrag && (QQFunctions::getMouseIsInWidget(m_titleLabel) || QQFunctions::getMouseIsInWidget(m_iconLabel)))
+            if (getIsAllowDrag() && (QQFunctions::getMouseIsInWidget(m_titleLabel) || QQFunctions::getMouseIsInWidget(m_iconLabel)))
             {
                 ReleaseCapture();
                 SendMessage(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
             }
             return QWidget::nativeEvent(eventType, message, result);
         }
+        default:
+            break;
+        }
+
+#else Q_OS_LINUX
+        if (eventType != "xcb_generic_event_t" || message == nullptr)
+        {
+            return false;
+        }
+        xcb_generic_event_t *event = static_cast<xcb_generic_event_t *>(message);
+        uint8_t responseType = event->response_type & 0x7f;
+        switch (responseType)
+        {
+        case XCB_CONFIGURE_NOTIFY:
+        {
+            xcb_configure_notify_event_t *configureEvent = reinterpret_cast<xcb_configure_notify_event_t *>(event);
+            if (configureEvent->window != wid)
+            {
+                return false;
+            }
+            if (configureEvent->width != width() || configureEvent->height != height())
+            {
+                return true;
+            }
+            break;
+        }
+
+        case XCB_MOTION_NOTIFY:
+        {
+            xcb_motion_notify_event_t *motionEvent = reinterpret_cast<xcb_motion_notify_event_t *>(event);
+            if (motionEvent->event != wid)
+            {
+                return false;
+            }
+            if (getIsAllowDrag() && (QQFunctions::getMouseIsInWidget(m_titleLabel) || QQFunctions::getMouseIsInWidget(m_iconLabel)))
+            {
+                XMoveWindow(QX11Info::display(), wid, motionEvent->root_x, motionEvent->root_y);
+                return true;
+            }
+            break;
+        }
+        default:
+            break;
         }
 #endif
         return QWidget::nativeEvent(eventType, message, result);
@@ -383,11 +427,11 @@ namespace QQWidgets
     AnimationTabBar::AnimationTabBar(QWidget *parent)
         : QTabBar(parent)
     {
-        m_maxWidth = 0;
-        m_backgroundColor = Qt::white;
-        m_hoverColor = Qt::black;
-        m_selectColor = Qt::black;
-        m_selectTextColor = Qt::white;
+        setMaxWidth(0);
+        setBackgroundColor(Qt::white);
+        setHoverColor(Qt::black);
+        setSelectColor(Qt::black);
+        setSelectTextColor(Qt::white);
         m_proxyStyle = new QQProxyStyle;
         this->setStyle(m_proxyStyle);
     }
@@ -419,7 +463,7 @@ namespace QQWidgets
 
     QSize AnimationTabBar::tabSizeHint(int index) const
     {
-        int width = m_maxWidth == 0 ? this->width() / this->count() : m_maxWidth;
+        int width = getMaxWidth() == 0 ? this->width() / this->count() : getMaxWidth();
         int height = this->height();
         return QSize(width, height);
     }

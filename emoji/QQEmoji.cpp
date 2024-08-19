@@ -195,7 +195,7 @@ void QQEmoji::initEmojiView()
 	insertData(1, item);
 	qobject_cast<QTableView *>(m_stackedWidget->widget(1))->setIndexWidget(m_models[1].first->indexFromItem(item), appendEmojiButton);
 	connect(appendEmojiButton, &QPushButton::clicked, this, &QQEmoji::do_emojiAppendBtnClicked);
-	Q_MSEND_EVENT(QQEnums::loademoji);
+	QQ_SEND_EVENT(QQEnums::loademoji);
 	for (int i = 0; i < m_stackedWidget->count(); ++i)
 	{
 		QTableView *tableView = qobject_cast<QTableView *>(m_stackedWidget->widget(i));
@@ -211,7 +211,7 @@ bool QQEmoji::event(QEvent *event)
 {
 	switch (event->type())
 	{
-		Q_MHANDLE_EVENT(QQEnums::loademoji, loadEmojiData);
+		QQ_HANDLE_EVENT_THIS(QQEnums::loademoji, loadEmojiData);
 	default:
 		break;
 	}
@@ -268,7 +268,7 @@ void QQEmoji::do_emojiAppendBtnClicked()
 			data.insert("type", format);
 			data.insert("content", QString(file.readAll()));
 			emojiData.insert("data", data);
-			Q_MSEND_EVENT(QQEnums::addemoji, QByteArray(QJsonDocument(emojiData).toJson()));
+			QQ_SEND_EVENT(QQEnums::addemoji, QByteArray(QJsonDocument(emojiData).toJson()));
 		}
 	}
 }
@@ -284,5 +284,5 @@ void QQEmoji::do_emojiEmojiItemClicked(const QModelIndex &index)
 	data.insert("type", index.data(Qt::UserRole).toString());
 	data.insert("content", index.data(Qt::UserRole + 1).toString());
 	emojiData.insert("data", data);
-	Q_MSEND_EVENT(QQEnums::sendemoji, QByteArray(QJsonDocument(emojiData).toJson()));
+	QQ_SEND_EVENT(QQEnums::sendemoji, QByteArray(QJsonDocument(emojiData).toJson()));
 }

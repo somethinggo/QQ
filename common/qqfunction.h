@@ -14,8 +14,8 @@
 #include <qjsonarray.h>
 #include <functional>
 
-#include "qqconfig.h"
 #include "qqenums.h"
+#include "qqglobal.h"
 
 namespace QQFunctions
 {

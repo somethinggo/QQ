@@ -81,7 +81,16 @@ namespace QQFunctions
     QRect getCalculateTextRect(const QString &text, const QFont &font)
     {
         QFontMetrics fm(font);
-        return fm.boundingRect(text);
+        QStringList lines = text.split('\n');
+        int width = 0;
+        int height = 0;
+        for (const QString &line : lines)
+        {
+            QRect rect = fm.boundingRect(line);
+            width = qMax(width, rect.width());
+            height += rect.height();
+        }
+        return QRect(0, 0, width, height);
     }
 
     QBitmap getRoundedMask(const QSize &size, qreal radius, QQEnums::RoundPostionTypes types)

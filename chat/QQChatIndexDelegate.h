@@ -18,8 +18,7 @@
 class QQChatIndexDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
-    Q_MPROPERTY_CREATE(QSize, ItemSize, m_itemSize)
-    Q_MPROPERTY_CREATE(qreal, MAXStringWidth, m_maxStringWidth)
+    QQ_PROPERTY_CREATE(QSize, ItemSize)
 public:
     explicit QQChatIndexDelegate(QObject *parent = nullptr);
     virtual ~QQChatIndexDelegate();
@@ -28,7 +27,6 @@ public:
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 
 private:
-    QSize m_iconSize;
     int8_t m_commonSpace;
 signals:
     void clicked(const QModelIndex &index);

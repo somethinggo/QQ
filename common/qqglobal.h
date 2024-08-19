@@ -18,12 +18,12 @@ namespace QQGlobals
     const qreal AUDIO_MAX_TIME = 60;
     const qreal AUDIO_MIN_TIME = 3;
 
-    extern QSharedPointer<QQConfigs::UserConfig> g_user;
-    extern QSharedPointer<QTcpSocket> g_tcpSocket;
-    extern QSharedPointer<QUdpSocket> g_udpSocket;
-    extern QHostAddress g_hostAddress;
-    extern quint16 g_hostPort;
-    extern QSharedPointer<QQThemes::DefaultTheme> g_theme;
+    Q_GLOBAL_STATIC(QQConfigs::UserConfig, g_user)
+    Q_GLOBAL_STATIC(QQThemes::DefaultTheme, g_theme)
+    Q_GLOBAL_STATIC(QTcpSocket, g_tcpSocket)
+    Q_GLOBAL_STATIC(QUdpSocket, g_udpSocket)
+    Q_GLOBAL_STATIC(QHostAddress, g_hostAddress)
+    Q_GLOBAL_STATIC(quint16, g_hostPort)
 }
 
 #endif // QQ_COMMON_GLOBAL_H

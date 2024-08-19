@@ -26,6 +26,10 @@
 #include <Windows.h>
 #include <dwmapi.h>
 #include <windowsx.h>
+#else Q_OS_LIUNX
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <QX11Info>
 #endif
 
 #include <ElaIcon.h>
@@ -36,11 +40,11 @@
 namespace QQWidgets
 {
 
-    class AppBar : public QWidget, QAbstractNativeEventFilter
+    class AppBar : public QWidget, public QAbstractNativeEventFilter
     {
         Q_OBJECT
-        Q_MPROPERTY_CREATE(bool, IsAllowDrag, m_isAllowDrag)     // 是否允许拖动
-        Q_MPROPERTY_CREATE(bool, IsAllowResize, m_isAllowResize) // 是否允许调整大小
+        QQ_PROPERTY_CREATE(bool, IsAllowDrag)   // 是否允许拖动
+        QQ_PROPERTY_CREATE(bool, IsAllowResize) // 是否允许调整大小
     public:
         explicit AppBar(QWidget *parent = nullptr, QQEnums::AppBarHintType types = QQEnums::AppBarHintType::WindowsHint);
         virtual ~AppBar();
@@ -83,6 +87,8 @@ namespace QQWidgets
     private:
         WId m_wid;
         QQEnums::AppBarHintTypes m_types;
+        QPoint m_pos;
+        bool m_isPressed;
         int m_margin;
         QIcon m_icon;
         QLabel *m_iconLabel;
@@ -102,11 +108,11 @@ namespace QQWidgets
             void drawControl(ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget = nullptr) const override;
         };
         Q_OBJECT
-        Q_MPROPERTY_CREATE(qreal, MaxWidth, m_maxWidth)                // 选项卡最大宽度
-        Q_MPROPERTY_CREATE(QColor, BackgroundColor, m_backgroundColor) // 背景板颜色
-        Q_MPROPERTY_CREATE(QColor, HoverColor, m_hoverColor)           // 鼠标选项卡悬停颜色
-        Q_MPROPERTY_CREATE(QColor, SelectColor, m_selectColor)         // 选中选项卡颜色
-        Q_MPROPERTY_CREATE(QColor, SelectTextColor, m_selectTextColor) // 选中选项卡文字颜色
+        QQ_PROPERTY_CREATE(qreal, MaxWidth)         // 选项卡最大宽度
+        QQ_PROPERTY_CREATE(QColor, BackgroundColor) // 背景板颜色
+        QQ_PROPERTY_CREATE(QColor, HoverColor)      // 鼠标选项卡悬停颜色
+        QQ_PROPERTY_CREATE(QColor, SelectColor)     // 选中选项卡颜色
+        QQ_PROPERTY_CREATE(QColor, SelectTextColor) // 选中选项卡文字颜色
     public:
         explicit AnimationTabBar(QWidget *parent = nullptr);
         virtual ~AnimationTabBar();
@@ -145,7 +151,7 @@ namespace QQWidgets
     class MessageDialog : public QDialog
     {
         Q_OBJECT
-        Q_MSINGLETON_CREATE(MessageDialog)
+        QQ_SINGLETON_CREATE(MessageDialog)
     private:
         explicit MessageDialog(QWidget *parent = nullptr);
         virtual ~MessageDialog();

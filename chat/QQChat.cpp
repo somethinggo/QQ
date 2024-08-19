@@ -10,6 +10,10 @@ void QQChatProxyStyle::drawPrimitive(PrimitiveElement element, const QStyleOptio
 	{
 		return;
 	}
+	else if (element == PE_FrameGroupBox)
+	{
+		return;
+	}
 	return QProxyStyle::drawPrimitive(element, option, painter, widget);
 }
 
@@ -117,64 +121,11 @@ QRect QQChatProxyStyle::subElementRect(SubElement element, const QStyleOption *o
 	return QProxyStyle::subElementRect(element, option, widget);
 }
 
-void QMSearchProxyStyle::drawPrimitive(PrimitiveElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const
-{
-	if (element == PE_FrameLineEdit)
-	{
-		QRect rect = option->rect;
-		QPen pen;
-		pen.setWidth(1);
-		if (widget && widget->hasFocus())
-		{
-			pen.setColor(QColor("#0099FF"));
-		}
-		else
-		{
-			pen.setColor(Qt::color0);
-		}
-		painter->setRenderHint(QPainter::Antialiasing, true);
-		painter->setPen(pen);
-		painter->drawRoundedRect(rect, 5, 5);
-		return;
-	}
-	return QProxyStyle::drawPrimitive(element, option, painter, widget);
-}
-
-void QMSearchProxyStyle::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const
-{
-	if (element == CE_PushButton)
-	{
-		QStyleOptionButton *buttonOption = const_cast<QStyleOptionButton *>(qstyleoption_cast<const QStyleOptionButton *>(option));
-		if (buttonOption && (buttonOption->state & State_MouseOver))
-		{
-			int h, s, v;
-			QColor color = widget->palette().brush(QPalette::Button).color();
-			color.getHsv(&h, &s, &v);
-			v = abs((v - 25) % 256);
-			color.setHsv(h, s, v);
-			painter->fillRect(option->rect, color);
-		}
-		if (buttonOption && (buttonOption->state & State_Sunken))
-		{
-			buttonOption->state &= ~State_Sunken;
-			buttonOption->state &= ~State_MouseOver;
-			int h, s, v;
-			QColor color = widget->palette().brush(QPalette::Button).color();
-			color.getHsv(&h, &s, &v);
-			v = abs((v - 50) % 256);
-			color.setHsv(h, s, v);
-			painter->fillRect(option->rect, color);
-		}
-	}
-	return QProxyStyle::drawControl(element, option, painter, widget);
-}
-
 QQChat::QQChat(QWidget *parent)
 	: QWidget(parent), ui(new Ui::QQChatClass())
 {
 	ui->setupUi(this);
 	m_commonStyle = new QQChatProxyStyle;
-	m_searchStyle = new QMSearchProxyStyle;
 	m_searchAction = new QAction(this);
 	m_searchAction->setIcon(QIcon(":/widget/common/images/widget/common/searchLab.png"));
 	m_searchMoreMenu = new ElaMenu(this);
@@ -184,7 +135,6 @@ QQChat::QQChat(QWidget *parent)
 	m_indexListModel = new QStandardItemModel(this);
 	m_indexListDelegate = new QQChatIndexDelegate(this);
 	m_indexListDelegate->setItemSize(QSize(350, 90));
-	m_indexListDelegate->setMAXStringWidth(300);
 	m_messageListModel = new QStandardItemModel(this);
 	m_messageListDelegate = new QQChatMessageDelegate(this);
 	m_chatFriendContextMenu = new ElaMenu(this);
@@ -193,10 +143,11 @@ QQChat::QQChat(QWidget *parent)
 	m_chatFriendContextMenu->addAction(ElaIcon::getInstance()->getElaIcon(ElaIconType::TrashCan), QString::fromLocal8Bit("删除该聊天"));
 	m_chatFriendContextMenu->addAction(ElaIcon::getInstance()->getElaIcon(ElaIconType::BrakeWarning), QString::fromLocal8Bit("举报"));
 
-	ui->searchInput->setStyle(m_searchStyle);
+	ui->searchInput->setStyle(QQThemes::searchProxyStyle);
 	ui->searchInput->addAction(m_searchAction, QLineEdit::LeadingPosition);
-	ui->searchMoreBtn->setStyle(m_searchStyle);
+	ui->searchMoreBtn->setStyle(QQThemes::searchProxyStyle);
 	ui->searchMoreBtn->setMask(QQFunctions::getRoundedMask(ui->searchMoreBtn->size(), 5));
+	ui->indexList->setStyle(m_commonStyle);
 	ui->indexList->setModel(m_indexListModel);
 	ui->indexList->setItemDelegate(m_indexListDelegate);
 	ui->nicknameLab->setStyle(m_commonStyle);
@@ -236,7 +187,6 @@ QQChat::QQChat(QWidget *parent)
 QQChat::~QQChat()
 {
 	delete m_commonStyle;
-	delete m_searchStyle;
 	delete ui;
 }
 
@@ -317,43 +267,43 @@ void QQChat::sendMessageToNetWork(const QSharedPointer<QQConfigs::MessageConfig>
 	{
 	case QQConfigs::MessageConfig::MessageType::text:
 	{
-		Q_MSEND_EVENT(QQEnums::sendtext, QJsonDocument(sendData).toJson());
+		QQ_SEND_EVENT(QQEnums::sendtext, QJsonDocument(sendData).toJson());
 		break;
 	}
 	case QQConfigs::MessageConfig::MessageType::image:
 	{
-		Q_MSEND_EVENT(QQEnums::sendimage, QJsonDocument(sendData).toJson());
+		QQ_SEND_EVENT(QQEnums::sendimage, QJsonDocument(sendData).toJson());
 		break;
 	}
 	case QQConfigs::MessageConfig::MessageType::link:
 	{
-		Q_MSEND_EVENT(QQEnums::sendlink, QJsonDocument(sendData).toJson());
+		QQ_SEND_EVENT(QQEnums::sendlink, QJsonDocument(sendData).toJson());
 		break;
 	}
 	}
 }
 
-void QQChat::loadPeopleInModelItem(QStandardItem *item, const QQConfigs::FriendConfig &user)
+void QQChat::loadPeopleInModelItem(QStandardItem *item, QQConfigs::FriendConfig *user)
 {
 	item->setData(QVariant::fromValue(user), Qt::UserRole);
 
-	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(user.m_icon)));
+	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(user->m_icon)));
 	icon = QQFunctions::getRoundedPixmap(icon.scaled(QQGlobals::g_theme->m_chat_index_icon_size, Qt::KeepAspectRatio), QQGlobals::g_theme->m_chat_index_icon_size.width() / 2);
-	item->setData(icon, Qt::UserRole + 2);
+	item->setData(icon, Qt::UserRole + 1);
 
-	QString name = QString::fromLocal8Bit(user.m_name.c_str());
-	if (!user.m_nickname.isNull())
+	QString name = QString::fromLocal8Bit(user->m_name.c_str());
+	if (!user->m_nickname.isNull())
 	{
-		name = user.m_nickname;
+		name = user->m_nickname;
 	}
 	name = QQFunctions::getCalculateText(name, QQGlobals::g_theme->m_chat_index_name_font, m_indexListDelegate->getItemSize().width() - 100, true);
-	item->setData(name, Qt::UserRole + 3);
+	item->setData(name, Qt::UserRole + 2);
 
-	QString lastMsg = user.m_lastMsg;
+	QString lastMsg = user->m_lastMsg;
 	lastMsg = QQFunctions::getCalculateText(lastMsg, QQGlobals::g_theme->m_chat_index_message_font, m_indexListDelegate->getItemSize().width() - 100, true);
-	item->setData(lastMsg, Qt::UserRole + 4);
+	item->setData(lastMsg, Qt::UserRole + 3);
 
-	QString time = user.m_lastMsgTime.toString();
+	QString time = user->m_lastMsgTime.toString();
 	qint64 daysDiff = QDateTime::fromString(time).secsTo(QDateTime::currentDateTime()) / (24 * 3600);
 	if (daysDiff < 1)
 	{
@@ -394,32 +344,32 @@ void QQChat::loadPeopleInModelItem(QStandardItem *item, const QQConfigs::FriendC
 	{
 		time = QDateTime::fromString(time).toString("yyyy/MM/dd");
 	}
-	item->setData(time, Qt::UserRole + 5);
+	item->setData(time, Qt::UserRole + 4);
 
-	item->setData(user.m_newMsgCount, Qt::UserRole + 6);
+	item->setData(user->m_newMsgCount, Qt::UserRole + 5);
 }
 
-void QQChat::loadPeopleInModelItem(QStandardItem *item, const QQConfigs::GroupConfig &group)
+void QQChat::loadPeopleInModelItem(QStandardItem *item, QQConfigs::GroupConfig *group)
 {
 	item->setData(QVariant::fromValue(group), Qt::UserRole);
 
-	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(group.m_icon)));
+	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(group->m_icon)));
 	icon = QQFunctions::getRoundedPixmap(icon.scaled(QQGlobals::g_theme->m_chat_index_icon_size, Qt::KeepAspectRatio), QQGlobals::g_theme->m_chat_index_icon_size.width() / 2);
-	item->setData(icon, Qt::UserRole + 2);
+	item->setData(icon, Qt::UserRole + 1);
 
-	QString name = QString::fromLocal8Bit(group.m_name.c_str());
-	if (!group.m_nickname.isNull())
+	QString name = QString::fromLocal8Bit(group->m_name.c_str());
+	if (!group->m_nickname.isNull())
 	{
-		name = group.m_nickname;
+		name = group->m_nickname;
 	}
 	name = QQFunctions::getCalculateText(name, QQGlobals::g_theme->m_chat_index_name_font, m_indexListDelegate->getItemSize().width() - 100, true);
-	item->setData(group.m_lastMsg, Qt::UserRole + 4);
+	item->setData(group->m_lastMsg, Qt::UserRole + 2);
 
-	QString lastMsg = group.m_lastMsg;
+	QString lastMsg = group->m_lastMsg;
 	lastMsg = QQFunctions::getCalculateText(lastMsg, QQGlobals::g_theme->m_chat_index_message_font, m_indexListDelegate->getItemSize().width() - 100, true);
-	item->setData(lastMsg, Qt::UserRole + 4);
+	item->setData(lastMsg, Qt::UserRole + 3);
 
-	QString time = group.m_lastMsgTime.toString();
+	QString time = group->m_lastMsgTime.toString();
 	qint64 daysDiff = QDateTime::fromString(time).secsTo(QDateTime::currentDateTime()) / (24 * 3600);
 	if (daysDiff < 1)
 	{
@@ -460,9 +410,9 @@ void QQChat::loadPeopleInModelItem(QStandardItem *item, const QQConfigs::GroupCo
 	{
 		time = QDateTime::fromString(time).toString("yyyy/MM/dd");
 	}
-	item->setData(time, Qt::UserRole + 5);
+	item->setData(time, Qt::UserRole + 4);
 
-	item->setData(group.m_newMsgCount, Qt::UserRole + 6);
+	item->setData(group->m_newMsgCount, Qt::UserRole + 5);
 }
 
 void QQChat::loadMessageInModelItem(QStandardItem *item, const QSharedPointer<QQConfigs::MessageConfig> &message)
@@ -600,7 +550,7 @@ void QQChat::loadMessageInModelItem(QStandardItem *item, const QSharedPointer<QQ
 		item->setData(false, Qt::UserRole + 5);
 		if (message->m_messageType == QQConfigs::MessageConfig::MessageType::file)
 		{
-			item->setData(true, Qt::UserRole + 6);
+			item->setData(100, Qt::UserRole + 6);
 		}
 		break;
 	}
@@ -645,7 +595,7 @@ void QQChat::sendFileByName(const QString &fileName)
 	data.insert("receiverID", QString::fromStdString(message->m_receiverID));
 	data.insert("fileName", fileName);
 	sendData.insert("data", data);
-	Q_MSEND_EVENT(QQEnums::sendfile, QJsonDocument(sendData).toJson());
+	QQ_SEND_EVENT(QQEnums::sendfile, QJsonDocument(sendData).toJson());
 }
 
 void QQChat::appendMessage(const QSharedPointer<QQConfigs::MessageConfig> &message, int index)
@@ -823,7 +773,7 @@ void QQChat::do_userContextMenuAction(QAction *action)
 			}
 			data.insert("report", report);
 			reportData.insert("data", data);
-			Q_MSEND_EVENT(QQEnums::sendreport, QJsonDocument(reportData).toJson());
+			QQ_SEND_EVENT(QQEnums::sendreport, QJsonDocument(reportData).toJson());
 			// 提示发送成功
 			ElaMessageBar::success(ElaMessageBarType::PositionPolicy::TopRight, "", QString::fromLocal8Bit("发送举报消息成功，感谢您的指正！"), 2000, this);
 		};
@@ -1048,7 +998,7 @@ void QQChat::do_userClickSendAudio()
 		sendData.insert("senderID", QString::fromStdString(QQGlobals::g_user->m_ID));
 		sendData.insert("receiverID", QString::fromStdString(group->m_ID));
 	}
-	Q_MSEND_EVENT(QQEnums::requestaudio, QJsonDocument(sendData).toJson());
+	QQ_SEND_EVENT(QQEnums::requestaudio, QJsonDocument(sendData).toJson());
 }
 
 void QQChat::do_userClickClearInput()

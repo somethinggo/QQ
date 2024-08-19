@@ -52,13 +52,6 @@ public:
 	QRect subElementRect(SubElement element, const QStyleOption *option, const QWidget *widget) const override;
 };
 
-class QMSearchProxyStyle : public QProxyStyle
-{
-public:
-	void drawPrimitive(PrimitiveElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget = nullptr) const override;
-	void drawControl(ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget = nullptr) const override;
-};
-
 class QQChat : public QWidget
 {
 	Q_OBJECT
@@ -69,14 +62,12 @@ public:
 private:
 	Ui::QQChatClass *ui;
 	QQChatProxyStyle *m_commonStyle;
-	QMSearchProxyStyle *m_searchStyle;
 	QAction *m_searchAction;
 	ElaMenu *m_searchMoreMenu;
 
 	/*
 	聊天索引列表模型,好友列表模型,群组列表模型--数据设置(以Qt::UserRole为基准)
 	0:索引体指针
-	1:索引窗口类型
 	2:索引体内部数据头像
 	3:索引体内部数据名称
 	--好友聊天显示好友名称--群组聊天显示群名称
@@ -132,13 +123,13 @@ private:
 	 * @param item
 	 * @param user
 	 */
-	void loadPeopleInModelItem(QStandardItem *item, const QQConfigs::FriendConfig &user);
+	void loadPeopleInModelItem(QStandardItem *item, QQConfigs::FriendConfig *user);
 	/**
 	 * @brief 加载群组信息到聊天索引列表项中
 	 * @param item
 	 * @param group
 	 */
-	void loadPeopleInModelItem(QStandardItem *item, const QQConfigs::GroupConfig &group);
+	void loadPeopleInModelItem(QStandardItem *item, QQConfigs::GroupConfig *group);
 	/**
 	 * @brief 加载消息信息到聊天消息列表项中
 	 * @param item

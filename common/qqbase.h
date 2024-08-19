@@ -95,7 +95,7 @@ namespace QQBaseConfigs
 		};
 		MessageType m_messageType = MessageType::text;
 		SenderType m_senderType = SenderType::me;
-		std::string m_ID; // 正考虑去除
+		std::string m_ID;
 		std::string m_senderID;
 		std::string m_receiverID;
 		std::string m_content;

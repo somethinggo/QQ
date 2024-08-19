@@ -51,7 +51,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             QPainterPath path;
             path.addRoundedRect(frame, 10, 10);
             painter->fillPath(path, Qt::white);
-            painter->drawText(textRect, Qt::AlignCenter, text);
+            painter->drawText(textRect, text);
             painter->restore();
             break;
         }
@@ -78,7 +78,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             QFileInfo fileInfo(QString::fromLocal8Bit(message->m_content.c_str()));
             QRect fileNameRect = QQFunctions::getCalculateTextRect(fileInfo.fileName(), painter->font());
             fileNameRect.moveTopLeft(frame.topLeft() + QPoint(1.5 * m_contentPadding, 1.5 * m_contentPadding));
-            painter->drawText(fileNameRect, Qt::AlignCenter, fileInfo.fileName());
+            painter->drawText(fileNameRect, fileInfo.fileName(), Qt::AlignLeft | Qt::AlignCenter);
 
             QRect fileIconRect = QRect(QPoint(frame.right() - 1.5 * m_contentPadding - QQGlobals::g_theme->m_chat_message_file_icon_size.width(), frame.top() + 1.5 * m_contentPadding),
                                        QQGlobals::g_theme->m_chat_message_file_icon_size);
@@ -109,7 +109,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             QPainterPath path;
             path.addRoundedRect(frame, 10, 10);
             painter->fillPath(path, Qt::white);
-            painter->drawText(linkRect, link);
+            painter->drawText(linkRect, link, Qt::AlignLeft | Qt::AlignCenter);
             painter->restore();
             break;
         }
@@ -185,7 +185,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             QPainterPath path;
             path.addRoundedRect(frame, 10, 10);
             painter->fillPath(path, Qt::white);
-            painter->drawText(textRect, text);
+            painter->drawText(textRect, text, Qt::AlignLeft | Qt::AlignCenter);
             painter->restore();
             break;
         }
@@ -211,7 +211,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             QFileInfo fileInfo(QString::fromLocal8Bit(message->m_content.c_str()));
             QRect fileNameRect = QQFunctions::getCalculateTextRect(fileInfo.fileName(), painter->font());
             fileNameRect.moveTopLeft(frame.topLeft() + QPoint(1.5 * m_contentPadding, 1.5 * m_contentPadding));
-            painter->drawText(fileNameRect, fileInfo.fileName());
+            painter->drawText(fileNameRect, fileInfo.fileName(), Qt::AlignLeft | Qt::AlignCenter);
 
             QRect fileIconRect = QRect(QPoint(frame.right() - 1.5 * m_contentPadding - QQGlobals::g_theme->m_chat_message_file_icon_size.width(), frame.top() + 1.5 * m_contentPadding),
                                        QQGlobals::g_theme->m_chat_message_file_icon_size);
@@ -233,7 +233,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
                 painter->drawPixmap(fileDownLoadIconRect, QPixmap(":/file/images/file/download.png"));
                 painter->restore();
             }
-            else if (index.data(Qt::UserRole + 6).toBool())
+            else if (index.data(Qt::UserRole + 6).toInt() != 100)
             {
                 painter->save();
                 QPainterPath iconPath;
@@ -244,7 +244,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
                 pen.setColor(Qt::white);
                 pen.setWidth(2);
                 painter->setPen(pen);
-                painter->drawArc(fileCancelDownLoadIconRect, 90 * 16, -index.data(Qt::UserRole + 7).toInt() * 16);
+                painter->drawArc(fileCancelDownLoadIconRect, 90 * 16, -index.data(Qt::UserRole + 6).toInt() * 16);
                 painter->drawPixmap(fileCancelDownLoadIconRect, QPixmap(":/file/images/file/cancel.png"));
                 painter->restore();
             }
@@ -273,7 +273,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             QPainterPath path;
             path.addRoundedRect(frame, 10, 10);
             painter->fillPath(path, Qt::white);
-            painter->drawText(linkRect, link);
+            painter->drawText(linkRect, link, Qt::AlignLeft | Qt::AlignCenter);
             painter->restore();
             break;
         }

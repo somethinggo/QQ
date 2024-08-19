@@ -144,9 +144,28 @@ QQFriend::QQFriend(QWidget *parent)
 
 	m_friendsListModel = new QStandardItemModel(this);
 	m_groupsListModel = new QStandardItemModel(this);
+	QStandardItem *groupItem1 = new QStandardItem;
+	groupItem1->setText(QString::fromLocal8Bit("置顶群聊"));
+	groupItem1->setIcon(ElaIcon::getInstance()->getElaIcon(ElaIconType::AngleRight, 32, Qt::black));
+	m_groupsListModel->appendRow(groupItem1);
+	QStandardItem *groupItem2 = new QStandardItem;
+	groupItem2->setText(QString::fromLocal8Bit("未命名的群聊"));
+	groupItem2->setIcon(ElaIcon::getInstance()->getElaIcon(ElaIconType::AngleRight, 32, Qt::black));
+	m_groupsListModel->appendRow(groupItem2);
+	QStandardItem *groupItem3 = new QStandardItem;
+	groupItem3->setText(QString::fromLocal8Bit("我创建的群聊"));
+	groupItem3->setIcon(ElaIcon::getInstance()->getElaIcon(ElaIconType::AngleRight, 32, Qt::black));
+	m_groupsListModel->appendRow(groupItem3);
+	QStandardItem *groupItem4 = new QStandardItem;
+	groupItem4->setText(QString::fromLocal8Bit("我管理的群聊"));
+	groupItem4->setIcon(ElaIcon::getInstance()->getElaIcon(ElaIconType::AngleRight, 32, Qt::black));
+	m_groupsListModel->appendRow(groupItem4);
+	QStandardItem *groupItem5 = new QStandardItem;
+	groupItem5->setText(QString::fromLocal8Bit("我加入的群聊"));
+	groupItem5->setIcon(ElaIcon::getInstance()->getElaIcon(ElaIconType::AngleRight, 32, Qt::black));
+	m_groupsListModel->appendRow(groupItem5);
 	m_indexListDelegate = new QQFriendIndexDelegate(this);
 	m_indexListDelegate->setItemSize(QSize(350, 90));
-	m_indexListDelegate->setMAXStringWidth(300);
 	m_friendContextMenu = new ElaMenu(this);
 	m_friendContextMenu->addAction(ElaIcon::getInstance()->getElaIcon(ElaIconType::Plus), QString::fromLocal8Bit("新建分组"));
 	m_friendContextMenu->addAction(ElaIcon::getInstance()->getElaIcon(ElaIconType::TrashCan), QString::fromLocal8Bit("删除该分组"));
@@ -167,8 +186,8 @@ QQFriend::QQFriend(QWidget *parent)
 	tabBarLayout->setContentsMargins(tabBarLayoutMargin, 0, tabBarLayoutMargin, 0);
 	tabBarLayout->addWidget(m_tabBar);
 
-	ui->searchInput->setStyle(QQThemes::Style::SearchProxyStyle::getInstance());
-	ui->searchMoreBtn->setStyle(QQThemes::Style::SearchProxyStyle::getInstance());
+	ui->searchInput->setStyle(QQThemes::searchProxyStyle);
+	ui->searchMoreBtn->setStyle(QQThemes::searchProxyStyle);
 	ui->searchMoreBtn->setMask(QQFunctions::getRoundedMask(ui->searchMoreBtn->size(), 5));
 	ui->layout->insertLayout(3, tabBarLayout);
 	ui->friendNoticeBtn->setStyle(m_proxyStyle);
@@ -250,32 +269,32 @@ bool QQFriend::eventFilter(QObject *watch, QEvent *event)
 	return QWidget::eventFilter(watch, event);
 }
 
-void QQFriend::loadPeopleInModelItem(QStandardItem *item, const QQConfigs::FriendConfig &user)
+void QQFriend::loadPeopleInModelItem(QStandardItem *item, QQConfigs::FriendConfig *user)
 {
 	item->setData(QVariant::fromValue(user), Qt::UserRole);
-	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(user.m_icon)));
+	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(user->m_icon)));
 	icon = QQFunctions::getRoundedPixmap(icon.scaled(QQGlobals::g_theme->m_friend_index_icon_size), QQGlobals::g_theme->m_friend_index_icon_size.width() / 2);
-	item->setData(icon, Qt::UserRole + 2);
-	QString name = QString::fromLocal8Bit(user.m_name.c_str()) + QString("(%1)").arg(user.m_nickname);
+	item->setData(icon, Qt::UserRole + 1);
+	QString name = QString::fromLocal8Bit(user->m_name.c_str()) + QString("(%1)").arg(user->m_nickname);
 	name = QQFunctions::getCalculateText(name, QQGlobals::g_theme->m_friend_index_name_font);
-	item->setData(name, Qt::UserRole + 3);
-	QString sign = QString::fromLocal8Bit(user.m_sign.c_str());
+	item->setData(name, Qt::UserRole + 2);
+	QString sign = QString::fromLocal8Bit(user->m_sign.c_str());
 	sign = QQFunctions::getCalculateText(sign, QQGlobals::g_theme->m_friend_index_sign_font);
-	item->setData(sign, Qt::UserRole + 4);
+	item->setData(sign, Qt::UserRole + 3);
 }
 
-void QQFriend::loadPeopleInModelItem(QStandardItem *item, const QQConfigs::GroupConfig &group)
+void QQFriend::loadPeopleInModelItem(QStandardItem *item, QQConfigs::GroupConfig *group)
 {
 	item->setData(QVariant::fromValue(group), Qt::UserRole);
-	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(group.m_icon)));
+	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(group->m_icon)));
 	icon = QQFunctions::getRoundedPixmap(icon.scaled(QQGlobals::g_theme->m_friend_index_icon_size), QQGlobals::g_theme->m_friend_index_icon_size.width() / 2);
-	item->setData(icon, Qt::UserRole + 2);
-	QString name = QString::fromLocal8Bit(group.m_name.c_str()) + QString("(%1)").arg(group.m_nickname);
+	item->setData(icon, Qt::UserRole + 1);
+	QString name = QString::fromLocal8Bit(group->m_name.c_str()) + QString("(%1)").arg(group->m_nickname);
 	name = QQFunctions::getCalculateText(name, QQGlobals::g_theme->m_friend_index_name_font);
-	item->setData(name, Qt::UserRole + 3);
-	QString account = QString::fromLocal8Bit(group.m_account.c_str());
+	item->setData(name, Qt::UserRole + 2);
+	QString account = QString::fromLocal8Bit(group->m_account.c_str());
 	account = QQFunctions::getCalculateText(account, QQGlobals::g_theme->m_friend_index_sign_font);
-	item->setData(account, Qt::UserRole + 4);
+	item->setData(account, Qt::UserRole + 3);
 }
 
 void QQFriend::do_userClickSearchMore()
@@ -539,5 +558,5 @@ void QQFriend::do_userClickSendMessage()
 		data.insert("chatId", QString::fromStdString(group->m_ID));
 	}
 	sendData.insert("data", data);
-	Q_MSEND_EVENT(QQEnums::requestchat, QJsonDocument(sendData).toJson());
+	QQ_SEND_EVENT(QQEnums::requestchat, QJsonDocument(sendData).toJson());
 }

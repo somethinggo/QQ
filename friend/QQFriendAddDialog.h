@@ -30,7 +30,7 @@ public:
 class QQFriendAddDialog : public QDialog
 {
 	Q_OBJECT
-	Q_MSINGLETON_CREATE(QQFriendAddDialog)
+	QQ_SINGLETON_CREATE(QQFriendAddDialog)
 private:
 	explicit QQFriendAddDialog(QWidget *parent = nullptr);
 	virtual ~QQFriendAddDialog();

@@ -3,8 +3,6 @@
 QQChatIndexDelegate::QQChatIndexDelegate(QObject *parent)
     : QStyledItemDelegate(parent)
 {
-    m_iconSize = QSize(50, 50);
-    m_maxStringWidth = 200;
     m_commonSpace = 10;
 }
 
@@ -31,7 +29,7 @@ void QQChatIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     }
 
     painter->save();
-    QPixmap icon = index.data(Qt::UserRole + 2).value<QPixmap>();
+    QPixmap icon = index.data(Qt::UserRole + 1).value<QPixmap>();
     QRect iconRect = QRect(QPoint(option.rect.height() / 2 - QQGlobals::g_theme->m_chat_index_icon_size.width() / 2, option.rect.y() + option.rect.height() / 2 - QQGlobals::g_theme->m_chat_index_icon_size.width() / 2), QQGlobals::g_theme->m_chat_index_icon_size);
     painter->drawPixmap(iconRect, icon);
     painter->restore();
@@ -42,7 +40,11 @@ void QQChatIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     {
         painter->setPen(QQGlobals::g_theme->m_chat_index_name_selected_color);
     }
-    QString name = index.data(Qt::UserRole + 3).toString();
+    else
+    {
+        painter->setPen(QQGlobals::g_theme->m_chat_index_name_color);
+    }
+    QString name = index.data(Qt::UserRole + 2).toString();
     QRect nameRect = QQFunctions::getCalculateTextRect(name, painter->font());
     nameRect.moveTopLeft(QPoint(iconRect.right() + m_commonSpace, iconRect.top()));
     painter->drawText(nameRect, Qt::AlignCenter, name);
@@ -54,7 +56,11 @@ void QQChatIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     {
         painter->setPen(QQGlobals::g_theme->m_chat_index_message_selected_color);
     }
-    QString message = index.data(Qt::UserRole + 4).toString();
+    else
+    {
+        painter->setPen(QQGlobals::g_theme->m_chat_index_message_color);
+    }
+    QString message = index.data(Qt::UserRole + 3).toString();
     QRect messageRect = QQFunctions::getCalculateTextRect(message, painter->font());
     messageRect.moveTopLeft(QPoint(nameRect.left(), nameRect.bottom()));
     painter->drawText(messageRect, Qt::AlignCenter, message);
@@ -68,16 +74,16 @@ void QQChatIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     }
     else
     {
-        painter->setPen(QQGlobals::g_theme->m_chat_index_time_normal_color);
+        painter->setPen(QQGlobals::g_theme->m_chat_index_time_color);
     }
-    QString time = index.data(Qt::UserRole + 5).toString();
+    QString time = index.data(Qt::UserRole + 4).toString();
     QRect timeRect = QQFunctions::getCalculateTextRect(time, painter->font());
     timeRect.moveTopLeft(QPoint(option.rect.width() - timeRect.width() - 2.5 * m_commonSpace, iconRect.top() + 0.2 * m_commonSpace));
     painter->drawText(timeRect, Qt::AlignCenter, time);
     painter->restore();
 
     QRect stateRect = QRect(timeRect.left() + m_commonSpace, timeRect.bottom() + m_commonSpace, 2 * m_commonSpace, 2 * m_commonSpace);
-    int newMsgCount = index.data(Qt::UserRole + 6).toInt();
+    int newMsgCount = index.data(Qt::UserRole + 5).toInt();
     if (newMsgCount <= 0)
     {
     }
@@ -118,5 +124,5 @@ void QQChatIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
 
 QSize QQChatIndexDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    return m_itemSize;
+    return getItemSize();
 }

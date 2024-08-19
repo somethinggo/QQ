@@ -49,7 +49,7 @@ void QQFriendIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
         }
 
         painter->save();
-        QPixmap icon = index.data(Qt::UserRole + 2).value<QPixmap>();
+        QPixmap icon = index.data(Qt::UserRole + 1).value<QPixmap>();
         QRect iconRect = QRect(QPoint(option.rect.height() / 2 - QQGlobals::g_theme->m_friend_index_icon_size.width() / 2, option.rect.y() + option.rect.height() / 2 - QQGlobals::g_theme->m_friend_index_icon_size.width() / 2),
                                QQGlobals::g_theme->m_friend_index_icon_size);
         painter->drawPixmap(iconRect, icon);
@@ -58,7 +58,7 @@ void QQFriendIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
         if (user != nullptr)
         {
             painter->save();
-            QString name = index.data(Qt::UserRole + 3).toString();
+            QString name = index.data(Qt::UserRole + 2).toString();
             if (option.state & QStyle::State_Selected)
             {
                 painter->setPen(QQGlobals::g_theme->m_friend_index_name_selected_color);
@@ -69,7 +69,7 @@ void QQFriendIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             painter->drawText(nameRect, Qt::AlignCenter, name);
 
             painter->setFont(QQGlobals::g_theme->m_friend_index_sign_font);
-            QString message = index.data(Qt::UserRole + 4).toString();
+            QString message = index.data(Qt::UserRole + 3).toString();
             QRect messageRect = QQFunctions::getCalculateTextRect(message, painter->font());
             messageRect.moveTopLeft(QPoint(nameRect.left(), nameRect.bottom()));
             painter->drawText(messageRect, Qt::AlignCenter, message);
@@ -78,7 +78,7 @@ void QQFriendIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
         else if (group != nullptr)
         {
             painter->save();
-            QString name = index.data(Qt::UserRole + 3).toString();
+            QString name = index.data(Qt::UserRole + 2).toString();
             if (option.state & QStyle::State_Selected)
             {
                 painter->setPen(QQGlobals::g_theme->m_friend_index_name_selected_color);
@@ -99,7 +99,7 @@ QSize QQFriendIndexDelegate::sizeHint(const QStyleOptionViewItem &option, const 
         int width = option.rect.width();
         return QSize(width, 40);
     }
-    return m_itemSize;
+    return getItemSize();
 }
 
 bool QQFriendIndexDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index)

@@ -330,7 +330,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="indexNULLTab">
         <layout class="QVBoxLayout" name="verticalLayout_19">
@@ -556,7 +556,7 @@
    <item>
     <widget class="QStackedWidget" name="chatStackWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="chatNULLTab">
       <layout class="QVBoxLayout" name="verticalLayout_18">
@@ -788,6 +788,9 @@
          </property>
          <property name="autoScroll">
           <bool>false</bool>
+         </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
          </property>
          <property name="selectionMode">
           <enum>QAbstractItemView::NoSelection</enum>

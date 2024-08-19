@@ -274,9 +274,9 @@ bool QQLogin::event(QEvent *event)
 {
 	switch (event->type())
 	{
-		Q_MHANDLE_EVENT(QQEnums::accpectlogin, login);
-		Q_MHANDLE_EVENT(QQEnums::accpectregistered, registered);
-		Q_MHANDLE_EVENT(QQEnums::accpectfindpassword, findPassword);
+		QQ_HANDLE_EVENT_THIS(QQEnums::accpectlogin, login);
+		QQ_HANDLE_EVENT_THIS(QQEnums::accpectregistered, registered);
+		QQ_HANDLE_EVENT_THIS(QQEnums::accpectfindpassword, findPassword);
 	default:
 		break;
 	}
@@ -519,7 +519,7 @@ void QQLogin::do_loginBtnClicked()
 	data.insert("password", password);
 	loginData.insert("data", data);
 
-	Q_MSEND_EVENT(QQEnums::login, QJsonDocument(loginData).toJson());
+	QQ_SEND_EVENT(QQEnums::login, QJsonDocument(loginData).toJson());
 }
 
 void QQLogin::do_registerBtnClicked()
@@ -546,7 +546,7 @@ void QQLogin::do_registerBtnClicked()
 	data.insert("number", number);
 	registerData.insert("data", data);
 
-	Q_MSEND_EVENT(QQEnums::registered, QJsonDocument(registerData).toJson());
+	QQ_SEND_EVENT(QQEnums::registered, QJsonDocument(registerData).toJson());
 }
 
 void QQLogin::do_findPasswordBtnClicked()
@@ -569,5 +569,5 @@ void QQLogin::do_findPasswordBtnClicked()
 	data.insert("number", number);
 	findPasswordData.insert("data", data);
 
-	Q_MSEND_EVENT(QQEnums::findpassword, QJsonDocument(findPasswordData).toJson());
+	QQ_SEND_EVENT(QQEnums::findpassword, QJsonDocument(findPasswordData).toJson());
 }

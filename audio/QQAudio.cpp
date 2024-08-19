@@ -46,7 +46,7 @@ bool QQAudio::event(QEvent *event)
 {
 	switch (event->type())
 	{
-		Q_MHANDLE_EVENT(QQEnums::sendaudio, QQAudio::respondRequest);
+		QQ_HANDLE_EVENT_THIS(QQEnums::sendaudio, QQAudio::respondRequest);
 	default:
 		return QWidget::event(event);
 	}
@@ -97,7 +97,7 @@ void QQAudio::keyReleaseEvent(QKeyEvent *event)
 				data.insert("senderID", m_senderID);
 				data.insert("receiverID", m_receiverID);
 				data.insert("content", QString(amrData));
-				Q_MSEND_EVENT(QQEnums::sendaudio, QJsonDocument(data).toJson());
+				QQ_SEND_EVENT(QQEnums::sendaudio, QJsonDocument(data).toJson());
 			}
 			m_audioData.clear();
 		}

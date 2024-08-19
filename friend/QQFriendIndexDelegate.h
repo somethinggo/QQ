@@ -15,8 +15,7 @@
 class QQFriendIndexDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
-    Q_MPROPERTY_CREATE(QSize, ItemSize, m_itemSize)
-    Q_MPROPERTY_CREATE(qreal, MAXStringWidth, m_maxStringWidth)
+    QQ_PROPERTY_CREATE(QSize, ItemSize)
 public:
     explicit QQFriendIndexDelegate(QObject *parent = nullptr);
     virtual ~QQFriendIndexDelegate();

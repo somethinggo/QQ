@@ -241,11 +241,11 @@ void QQFriendAddDialog::do_searchTextChanged(const QString &text)
 	sendData.insert("data", data);
 	if (m_tabBar->currentIndex() == 0)
 	{
-		Q_MSEND_EVENT(QQEnums::searchfriend, QJsonDocument(sendData).toJson());
+		QQ_SEND_EVENT(QQEnums::searchfriend, QJsonDocument(sendData).toJson());
 	}
 	else if (m_tabBar->currentIndex() == 1)
 	{
-		Q_MSEND_EVENT(QQEnums::searchgroup, QJsonDocument(sendData).toJson());
+		QQ_SEND_EVENT(QQEnums::searchgroup, QJsonDocument(sendData).toJson());
 	}
 }
 

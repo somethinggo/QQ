@@ -72,8 +72,8 @@ protected:
 	bool eventFilter(QObject *watch, QEvent *event) override;
 
 private:
-	void loadPeopleInModelItem(QStandardItem *item, const QQConfigs::FriendConfig &user);
-	void loadPeopleInModelItem(QStandardItem *item, const QQConfigs::GroupConfig &group);
+	void loadPeopleInModelItem(QStandardItem *item, QQConfigs::FriendConfig *user);
+	void loadPeopleInModelItem(QStandardItem *item, QQConfigs::GroupConfig *group);
 private slots:
 	void do_userClickSearchMore();
 	void do_userClickSearchMoreAction(QAction *action);

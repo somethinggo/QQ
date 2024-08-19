@@ -47,11 +47,17 @@ namespace QQThemes
 
     struct Color
     {
+        QColor m_chat_index_frame_color = Qt::white;
         QColor m_chat_index_frame_hover_color = QColor("#F2F2F2");
         QColor m_chat_index_frame_selected_color = QColor("#0099FF");
+        QColor m_chat_index_name_color = Qt::black;
+        QColor m_chat_index_name_hover_color = Qt::black;
         QColor m_chat_index_name_selected_color = Qt::white;
+        QColor m_chat_index_message_color = Qt::black;
+        QColor m_chat_index_message_hover_color = Qt::white;
         QColor m_chat_index_message_selected_color = Qt::white;
-        QColor m_chat_index_time_normal_color = Qt::gray;
+        QColor m_chat_index_time_color = Qt::gray;
+        QColor m_chat_index_time_hover_color = Qt::gray;
         QColor m_chat_index_time_selected_color = Qt::white;
 
         QColor m_chat_message_name_color = QColor("#333333");
@@ -108,7 +114,7 @@ namespace QQThemes
         QSize m_chat_message_image_frame_max_size = QSize(280, 280);
         QSize m_chat_message_image_frame_min_size = QSize(100, 100);
 
-        QSize m_friend_index_icon_size = QSize(40, 40);
+        QSize m_friend_index_icon_size = QSize(50, 50);
         QSize m_friend_add_validate_icon_size = QSize(40, 40);
         QSize m_friend_add_validate_button_size = QSize(100, 40);
     };
@@ -117,12 +123,12 @@ namespace QQThemes
     {
         class SearchProxyStyle : public QProxyStyle
         {
-
         public:
             void drawPrimitive(PrimitiveElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget = nullptr) const override;
             void drawControl(ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget = nullptr) const override;
         };
     };
+    Q_GLOBAL_STATIC(Style::SearchProxyStyle, searchProxyStyle)
 
     class DefaultTheme : public Font, public Color, public Icon, public Size, public Style
     {
