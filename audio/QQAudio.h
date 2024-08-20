@@ -43,8 +43,7 @@ extern "C"
 #include <qtemporaryfile.h>
 #endif
 
-#include "qqglobal.h"
-#include "qqfunction.h"
+#include "common/qqfunction.h"
 
 class QQAudio : public QWidget
 {
@@ -52,7 +51,7 @@ class QQAudio : public QWidget
 	QQ_SINGLETON_CREATE(QQAudio)
 public:
 	explicit QQAudio(QWidget *parent = nullptr);
-	virtual ~QQAudio();
+	~QQAudio();
 
 protected:
 	bool event(QEvent *event) override;

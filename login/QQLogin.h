@@ -16,13 +16,12 @@
 #include <qtimer.h>
 #include <qaction.h>
 
-#include "three/include/qtmaterialcircularprogress.h"
-#include "three/include/ElaMessageBar.h"
-
-#include "qqglobal.h"
-#include "qqfunction.h"
+#include <qtmaterialcircularprogress.h>
+#include <ElaMessageBar.h>
 
 #include "ui_QQLogin.h"
+
+#include "common/qqfunction.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -41,9 +40,12 @@ public:
 class QQLogin : public QWidget
 {
 	Q_OBJECT
+	QQ_SINGLETON_CREATE(QQLogin)
 public:
-	QQLogin(QWidget *parent = nullptr);
+	explicit QQLogin(QWidget *parent = nullptr);
 	~QQLogin();
+
+private:
 	void disEnableAllWidget(bool isEnable);
 	void login(const QByteArray &data);
 	void registered(const QByteArray &data);
@@ -62,12 +64,12 @@ private slots:
 
 private:
 	Ui::QQLoginClass *ui;
-	QValidator *m_accountValidator;			// 验证输入的是否为账号
-	QValidator *m_numberValidator;			// 验证输入的是否为号码
-	QValidator *m_passwordValidator;		// 验证输入的是否为密码
-	QProxyStyle *m_proxyStyle;				// 自定义样式
-	QtMaterialCircularProgress *m_progress; // 点击登录按钮时的进度条
-	uint64_t m_count;						// 记录点击登录按钮的次数
+	QValidator *m_accountValidator;
+	QValidator *m_numberValidator;
+	QValidator *m_passwordValidator;
+	QProxyStyle *m_proxyStyle;
+	QtMaterialCircularProgress *m_progress;
+	uint64_t m_count;
 };
 
 #endif // QQ_LOGIN_LOGIN_H

@@ -800,7 +800,150 @@ namespace QQWidgets
 
     void PixelListView::wheelEvent(QWheelEvent *event)
     {
-        this->verticalScrollBar()->setValue(this->verticalScrollBar()->value() - event->angleDelta().y());
+        this->verticalScrollBar()->setValue(this->verticalScrollBar()->value() - 0.5 * event->angleDelta().y());
         event->accept();
     }
+
+    void AnimationFillButton::QQProxyStyle::drawPrimitive(PrimitiveElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const
+    {
+        if (element == PE_IndicatorRadioButton)
+        {
+            return;
+        }
+        return QProxyStyle::drawPrimitive(element, option, painter, widget);
+    }
+
+    void AnimationFillButton::QQProxyStyle::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const
+    {
+        if (element == CE_RadioButton)
+        {
+            QStyleOptionButton *buttonOption = const_cast<QStyleOptionButton *>(qstyleoption_cast<const QStyleOptionButton *>(option));
+            if (buttonOption && (buttonOption->state & State_Sunken))
+            {
+                buttonOption->state &= ~State_Sunken;
+                buttonOption->state &= ~State_MouseOver;
+            }
+            if (buttonOption && (buttonOption->state & State_MouseOver))
+            {
+                buttonOption->state &= ~State_MouseOver;
+                painter->fillRect(option->rect, QColor("#C5C4C5"));
+            }
+            if (buttonOption && (buttonOption->state & State_On))
+            {
+                buttonOption->state &= ~State_On;
+                painter->fillRect(option->rect, QColor("#C5C4C5"));
+            }
+        }
+        else if (element == CE_RadioButtonLabel)
+        {
+            QStyleOptionButton *buttonOption = const_cast<QStyleOptionButton *>(qstyleoption_cast<const QStyleOptionButton *>(option));
+            const QRadioButton *radioButton = qobject_cast<const QRadioButton *>(widget);
+            if (buttonOption && radioButton)
+            {
+                QRect rect = option->rect;
+                QPixmap pixmap = buttonOption->icon.pixmap(buttonOption->iconSize);
+                int x = (radioButton->rect().width() - pixmap.width()) / 2;
+                int y = (radioButton->rect().height() - pixmap.height()) / 2;
+                painter->drawPixmap(x, y, pixmap);
+                return;
+            }
+        }
+        return QProxyStyle::drawControl(element, option, painter, widget);
+    }
+
+    AnimationFillButton::AnimationFillButton(QWidget *parent)
+        : QRadioButton(parent)
+    {
+        m_timer = new QTimer(this);
+        m_proxyStyle = new QQProxyStyle;
+        this->setStyle(m_proxyStyle);
+        connect(m_timer, &QTimer::timeout, this, &AnimationFillButton::do_timeout);
+        connect(this, &QRadioButton::toggled, this, &AnimationFillButton::do_toggled);
+    }
+
+    AnimationFillButton::~AnimationFillButton()
+    {
+        delete m_proxyStyle;
+    }
+
+    void AnimationFillButton::setIconSize(const QSize &size)
+    {
+        m_prePixmap = this->icon().pixmap(size);
+        QImage image = this->icon().pixmap(size).toImage();
+        m_pixmap = QPixmap::fromImage(QQFunctions::getFillImage(image, Qt::black, Qt::blue));
+        return QRadioButton::setIconSize(size);
+    }
+
+    void AnimationFillButton::mouseReleaseEvent(QMouseEvent *event)
+    {
+        if (this->isEnabled())
+        {
+            if (event->button() == Qt::LeftButton)
+            {
+                m_width = 0;
+                m_height = 0;
+                m_timer->start(5);
+            }
+        }
+        return QRadioButton::mouseReleaseEvent(event);
+    }
+
+    void AnimationFillButton::do_timeout()
+    {
+        if (!this->isChecked())
+        {
+            m_timer->stop();
+            this->setIcon(m_prePixmap);
+            return;
+        }
+        if (m_width < this->iconSize().width())
+        {
+            m_width += 1;
+        }
+        else if (m_height < this->iconSize().height())
+        {
+            m_height += 1;
+        }
+        else
+        {
+            m_timer->stop();
+        }
+
+        QPainterPath path;
+        if (m_width < this->iconSize().width())
+        {
+            path.moveTo(0, this->iconSize().height());
+            path.lineTo(0, this->iconSize().height() - m_width);
+            path.lineTo(m_width, this->iconSize().height());
+            path.lineTo(0, this->iconSize().height());
+            path.closeSubpath();
+        }
+        else
+        {
+            path.moveTo(0, this->iconSize().height());
+            path.lineTo(0, 0);
+            path.lineTo(m_height, 0);
+            path.lineTo(this->iconSize().width(), m_height);
+            path.lineTo(this->iconSize().width(), this->iconSize().height());
+            path.lineTo(0, this->iconSize().height());
+            path.closeSubpath();
+        }
+        QPixmap pixmap = QPixmap(this->iconSize());
+        pixmap.fill(Qt::transparent);
+        QPainter painter(&pixmap);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setClipPath(path);
+        painter.drawPixmap(0, 0, m_pixmap);
+        this->setIcon(pixmap);
+    }
+
+    void AnimationFillButton::do_toggled(bool checked)
+    {
+        if (!checked)
+        {
+            m_timer->stop();
+            this->setIcon(m_prePixmap);
+        }
+    }
+
 }

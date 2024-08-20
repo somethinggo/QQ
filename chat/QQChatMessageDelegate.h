@@ -12,15 +12,14 @@
 #include <qpainterpath.h>
 #include <qfileinfo.h>
 
-#include "qqglobal.h"
-#include "qqfunction.h"
+#include "common/qqfunction.h"
 
 class QQChatMessageDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 public:
     explicit QQChatMessageDelegate(QObject *parent = nullptr);
-    virtual ~QQChatMessageDelegate();
+    ~QQChatMessageDelegate();
 
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override;

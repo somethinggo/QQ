@@ -10,7 +10,6 @@
 #include <qpainterpath.h>
 
 #include "common/qqfunction.h"
-#include "common/qqglobal.h"
 
 class QQFriendIndexDelegate : public QStyledItemDelegate
 {
@@ -18,7 +17,7 @@ class QQFriendIndexDelegate : public QStyledItemDelegate
     QQ_PROPERTY_CREATE(QSize, ItemSize)
 public:
     explicit QQFriendIndexDelegate(QObject *parent = nullptr);
-    virtual ~QQFriendIndexDelegate();
+    ~QQFriendIndexDelegate();
 
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override;

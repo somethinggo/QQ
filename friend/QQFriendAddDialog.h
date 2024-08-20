@@ -1,5 +1,5 @@
-﻿#ifndef QQ_FRIEND_ADDFRIENDDIALOG_H
-#define QQ_FRIEND_ADDFRIENDDIALOG_H
+﻿#ifndef QQ_FRIEND_ADDDIALOG_H
+#define QQ_FRIEND_ADDDIALOG_H
 
 #include <qdialog.h>
 #include <qlayout.h>
@@ -17,7 +17,7 @@
 #include <ElaLineEdit.h>
 
 #include "common/qqwidget.h"
-#include "common/qqglobal.h"
+
 #include "QQFriendValidateInfo.h"
 
 class QQFriendAddDialogProxyStyle : public QProxyStyle
@@ -33,19 +33,29 @@ class QQFriendAddDialog : public QDialog
 	QQ_SINGLETON_CREATE(QQFriendAddDialog)
 private:
 	explicit QQFriendAddDialog(QWidget *parent = nullptr);
-	virtual ~QQFriendAddDialog();
+	~QQFriendAddDialog();
 
 public:
 	/**
 	 * @brief 添加用户信息
 	 * @param user 用户信息
 	 */
+
 	void appendUser(QQConfigs::FriendConfig *user);
 	/**
 	 * @brief 添加群信息
 	 * @param group 群信息
 	 */
 	void appendGroup(QQConfigs::GroupConfig *group);
+
+protected:
+	void closeEvent(QCloseEvent *event) override;
+
+private slots:
+	void do_tabBarCurrentChanged(int index);
+	void do_searchTextChanged(const QString &text);
+	void do_userClickFriendItem(const QModelIndex &index);
+	void do_userClickGroupItem(const QModelIndex &index);
 
 private:
 	QProxyStyle *m_proxyStyle;
@@ -58,14 +68,6 @@ private:
 	QDialogButtonBox *m_buttonBox;
 	QStackedWidget *m_stackedWidget;
 	QStackedWidget *m_informationWidget;
-
-protected:
-	void closeEvent(QCloseEvent *event) override;
-private slots:
-	void do_tabBarCurrentChanged(int index);
-	void do_searchTextChanged(const QString &text);
-	void do_userClickFriendItem(const QModelIndex &index);
-	void do_userClickGroupItem(const QModelIndex &index);
 };
 
-#endif // QQ_FRIEND_ADDFRIENDDIALOG_H
+#endif // QQ_FRIEND_ADDDIALOG_H

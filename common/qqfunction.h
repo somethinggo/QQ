@@ -14,12 +14,13 @@
 #include <qjsonarray.h>
 #include <functional>
 
-#include "qqenums.h"
+#include "qqenum.h"
 #include "qqglobal.h"
 
 namespace QQFunctions
 {
 	void initSystem();
+
 	void exitSystem();
 
 	/**
@@ -28,6 +29,7 @@ namespace QQFunctions
 	 * @return 用户信息
 	 */
 	QQConfigs::FriendConfig *getUserInfo(const QString &ID);
+
 	/**
 	 * @brief 获取群信息
 	 * @param ID 群ID
@@ -122,6 +124,14 @@ namespace QQFunctions
 	 * @return 是否在控件内
 	 */
 	bool getMouseIsInWidget(QWidget *widget, QPoint pos = QPoint());
+
+	/**
+	 * @brief 获取改变指定颜色的图片
+	 * @param image 图片
+	 * @param pre 原颜色
+	 * @param next 新颜色
+	 */
+	QImage getFillImage(const QImage &image, const QColor &pre, const QColor &next);
 
 }
 

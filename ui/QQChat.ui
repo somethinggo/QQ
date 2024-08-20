@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1173</width>
-    <height>553</height>
+    <height>713</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -330,7 +330,7 @@
         </size>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="indexNULLTab">
         <layout class="QVBoxLayout" name="verticalLayout_19">
@@ -556,7 +556,7 @@
    <item>
     <widget class="QStackedWidget" name="chatStackWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="chatNULLTab">
       <layout class="QVBoxLayout" name="verticalLayout_18">

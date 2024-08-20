@@ -24,8 +24,8 @@
 
 #include <ElaMessageBar.h>
 
-#include "qqglobal.h"
-#include "qqwidget.h"
+#include "common/qqwidget.h"
+
 #include "QQEmojiLab.h"
 
 class QQEmojiProxyStyle : public QProxyStyle
@@ -39,27 +39,31 @@ class QQEmoji : public QDialog
 {
 	Q_OBJECT
 	QQ_SINGLETON_CREATE(QQEmoji)
-private:
+public:
 	explicit QQEmoji(QWidget *parent = nullptr);
-	virtual ~QQEmoji();
-	void appendTabView();											   // 添加新的表情组
-	void appendEmojiByUnicode(char32_t *start, int len, char32_t end); // 添加Unicode表情
-	void insertData(int index, QStandardItem *item);				   // 更新位置
-	void initEmojiView();											   // 初始化表情视图
-	void loadEmojiData(const QByteArray &data);						   // 加载表情数据
+	~QQEmoji();
+
+private:
+	void appendTabView();
+	void appendEmojiByUnicode(char32_t *start, int len, char32_t end);
+	void insertData(int index, QStandardItem *item);
+	void initEmojiView();
+	void loadEmojiData(const QByteArray &data);
+
 protected:
 	bool event(QEvent *event) override;
 
+private slots:
+	void do_emojiAppendBtnClicked();
+	void do_emojiEmojiItemClicked(const QModelIndex &index);
+
 private:
-	const uint MAX_COLUMN_COUNT = 10; // 最大列数
+	const uint MAX_COLUMN_COUNT = 10;
 	QProxyStyle *m_proxyStyle;
 	QQWidgets::AppBar *m_appBar;
 	QStackedWidget *m_stackedWidget;
 	QQWidgets::AnimationTabBar *m_tabBar;
 	QList<QPair<QStandardItemModel *, QPoint>> m_models; // 当前表情组--表情模型,最后一个表情位置
-private slots:
-	void do_emojiAppendBtnClicked();
-	void do_emojiEmojiItemClicked(const QModelIndex &index);
 };
 
 #endif // QQ_EMOJI_EMOJI_H

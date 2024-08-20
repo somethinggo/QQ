@@ -3,8 +3,7 @@ project(QQ LANGUAGES CXX)
 
 set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(Qt_DIR "C:/Qt/5.15.2/msvc2019_64")
-set(CMAKE_PREFIX_PATH Qt_DIR)
+set(CMAKE_PREFIX_PATH $ENV{Qt_DIR})
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -96,6 +95,7 @@ foreach(MOC_DIR ${MOUDLE_DIRS})
   file(GLOB MOC_TEMP_FILES ${MOC_DIR}/*.h)
   list(APPEND MOC_FILES ${MOC_TEMP_FILES})
 endforeach()
+list(APPEND MOC_FILES QQMain.h)
 set(RCC_DIR ${CMAKE_SOURCE_DIR}/resource)
 file(GLOB RCC_FILES ${RCC_DIR}/*.qrc)
 qt_wrap_ui(UI_OUTPUT ${UI_FILES})
@@ -106,6 +106,7 @@ qt_add_resources(RCC_OUTPUT ${RCC_FILES})
 foreach(INCLUDE_DIR ${MOUDLE_DIRS})
   include_directories(${INCLUDE_DIR})
 endforeach()
+include_directories(${CMAKE_SOURCE_DIR})
 
 # 设置源文件路径
 set(SRC_FILES)
@@ -113,6 +114,7 @@ foreach(MOUDLE_DIR ${MOUDLE_DIRS})
   file(GLOB MOUDLE_SRC_FILES ${MOUDLE_DIR}/*.cpp)
   list(APPEND SRC_FILES ${MOUDLE_SRC_FILES})
 endforeach()
+list(APPEND SRC_FILES QQMain.cpp)
 list(APPEND SRC_FILES main.cpp)
 
 # 设置外部依赖库

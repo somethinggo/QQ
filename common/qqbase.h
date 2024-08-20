@@ -47,11 +47,12 @@ namespace QQBaseConfigs
 		std::string m_name;
 		std::string m_icon;
 		std::string m_sign;
-		std::vector<std::string> m_dynamicList; // 来源于动态表
+		std::vector<std::string> m_dynamicList;
+
 	private:
 		std::string m_password;
-		std::vector<std::string> m_friendList; // 来源于用户表
-		std::vector<std::string> m_groupList;  // 来源于群聊表
+		std::vector<std::string> m_friendList;
+		std::vector<std::string> m_groupList;
 	} UserBaseConfig;
 
 	// 基础群聊配置
@@ -69,7 +70,7 @@ namespace QQBaseConfigs
 		std::string m_icon;
 		std::string m_describe;
 		uint64_t m_memberCount;
-		std::vector<std::string> m_memberList; // 来源于用户表
+		std::vector<std::string> m_memberList;
 	} GroupBaseConfig;
 
 	// 基础消息配置
@@ -121,7 +122,7 @@ namespace QQBaseConfigs
 		std::string m_userID;
 		std::string m_content;
 		std::time_t m_time;
-		std::vector<std::string> m_likeList; // 来源于用户表
+		std::vector<std::string> m_likeList;
 		std::vector<std::string> m_commentList;
 	} DynamicBaseConfig;
 

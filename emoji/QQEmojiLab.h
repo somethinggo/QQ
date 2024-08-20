@@ -1,5 +1,5 @@
-﻿#ifndef QQ_EMOJI_EMOJILAB_H
-#define QQ_EMOJI_EMOJILAB_H
+﻿#ifndef QQ_EMOJI_LAB_H
+#define QQ_EMOJI_LAB_H
 
 #include <qlabel.h>
 #include <qmovie.h>
@@ -7,14 +7,19 @@
 #include <qpainter.h>
 #include <qpainterpath.h>
 
-#include "qqglobal.h"
+#include "common/qqglobal.h"
 
 class QQEmojiLab : public QLabel
 {
     Q_OBJECT
 public:
-    QQEmojiLab(QWidget *parent = nullptr);
-    virtual ~QQEmojiLab();
+    explicit QQEmojiLab(QWidget *parent = nullptr);
+    ~QQEmojiLab();
+
+    /**
+     * @brief 设置gif表情
+     * @param movie 表情
+     */
     void setMovie(QMovie *movie);
 
 protected:
@@ -33,4 +38,4 @@ private:
     bool m_isPressed;
 };
 
-#endif // QQ_EMOJI_EMOJILAB_H
+#endif // QQ_EMOJI_LAB_H

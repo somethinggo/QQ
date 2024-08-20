@@ -14,9 +14,9 @@
 #include <ElaComboBox.h>
 #include <ElaMessageBar.h>
 
-#include "ui_QQFriend.h"
 #include "common/qqwidget.h"
-#include "common/qqglobal.h"
+
+#include "ui_QQFriend.h"
 #include "QQFriendIndexDelegate.h"
 
 QT_BEGIN_NAMESPACE
@@ -36,10 +36,30 @@ public:
 class QQFriend : public QWidget
 {
 	Q_OBJECT
-
+	QQ_SINGLETON_CREATE(QQFriend)
 public:
 	explicit QQFriend(QWidget *parent = nullptr);
-	virtual ~QQFriend();
+	~QQFriend();
+
+protected:
+	bool eventFilter(QObject *watch, QEvent *event) override;
+
+private:
+	void loadPeopleInModelItem(QStandardItem *item, QQConfigs::FriendConfig *user);
+	void loadPeopleInModelItem(QStandardItem *item, QQConfigs::GroupConfig *group);
+
+private slots:
+	void do_userClickSearchMore();
+	void do_userClickSearchMoreAction(QAction *action);
+	void do_userClickRightContextMenu(const QPoint &pos);
+	void do_userClickRightContextMenuAction(QAction *action);
+	void do_userClickNotice();
+	void do_userClickFriendListIndex(const QModelIndex &index);
+	void do_userClickGroupListIndex(const QModelIndex &index);
+	void do_userSelectedGroupChanged(const QString &text);
+	void do_userClickShareOther();
+	void do_userClickMusicConnect();
+	void do_userClickSendMessage();
 
 private:
 	Ui::QQFriendClass *ui;
@@ -67,25 +87,6 @@ private:
 	ElaMenu *m_friendContextMenu;
 	QQWidgets::AnimationTabBar *m_tabBar;
 	QMap<QString, QModelIndex> m_friendsGroups;
-
-protected:
-	bool eventFilter(QObject *watch, QEvent *event) override;
-
-private:
-	void loadPeopleInModelItem(QStandardItem *item, QQConfigs::FriendConfig *user);
-	void loadPeopleInModelItem(QStandardItem *item, QQConfigs::GroupConfig *group);
-private slots:
-	void do_userClickSearchMore();
-	void do_userClickSearchMoreAction(QAction *action);
-	void do_userClickRightContextMenu(const QPoint &pos);
-	void do_userClickRightContextMenuAction(QAction *action);
-	void do_userClickNotice();
-	void do_userClickFriendListIndex(const QModelIndex &index);
-	void do_userClickGroupListIndex(const QModelIndex &index);
-	void do_userSelectedGroupChanged(const QString &text);
-	void do_userClickShareOther();
-	void do_userClickMusicConnect();
-	void do_userClickSendMessage();
 };
 
 #endif // QQ_FRIEND_FRIEND_H

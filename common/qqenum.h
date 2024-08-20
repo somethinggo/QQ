@@ -1,5 +1,5 @@
-﻿#ifndef QQ_COMMON_ENUMS_H
-#define QQ_COMMON_ENUMS_H
+﻿#ifndef QQ_COMMON_ENUM_H
+#define QQ_COMMON_ENUM_H
 
 #include <qglobal.h>
 #include <qnamespace.h>
@@ -17,6 +17,7 @@ namespace QQEnums
     QQ_DECLARE_FLAGS(GroupBaseConfig, GroupStateType)
     QQ_DECLARE_FLAGS(MessageBaseConfig, MessageType)
     QQ_DECLARE_FLAGS(DynamicBaseConfig, DynamicType)
+
     // 事件枚举
     enum class EventType
     {
@@ -115,6 +116,7 @@ namespace QQEnums
         left,
         bottom
     };
+
     // 信息的类型枚举
     enum class InfoWidgetType : char
     {

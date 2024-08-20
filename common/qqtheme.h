@@ -12,11 +12,11 @@
 #include <qproxystyle.h>
 #include <qstyleoption.h>
 
+/**
+ * @brief 主题样式主要是针对颜色、字体、图标等进行设置，而大小主要是方便查看与后续的扩展
+ */
 namespace QQThemes
 {
-    /**
-     * @brief 主题样式主要是针对颜色、字体、图标等进行设置，而大小主要是方便查看与后续的扩展
-     */
     struct Font
     {
         QFont m_chat_index_name_font = QFont("Microsoft YaHei", 12);
@@ -121,6 +121,9 @@ namespace QQThemes
 
     struct Style
     {
+        /**
+         * @brief 搜索框代理样式
+         */
         class SearchProxyStyle : public QProxyStyle
         {
         public:

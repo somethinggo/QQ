@@ -244,4 +244,23 @@ namespace QQFunctions
         QRect widgetRect = widget->rect().translated(widget->mapToGlobal(QPoint(0, 0)));
         return widgetRect.contains(pos);
     }
+
+    QImage getFillImage(const QImage &image, const QColor &pre, const QColor &next)
+    {
+        QImage result = image;
+        QRgb preRgb = pre.rgb();
+        int r = pre.red(), g = pre.green(), b = pre.blue(), a = pre.alpha();
+        for (int y = 0; y < result.height(); y++)
+        {
+            for (int x = 0; x < result.width(); x++)
+            {
+                QRgb pixel = result.pixel(x, y);
+                if (qRed(pixel) == r && qGreen(pixel) == g && qBlue(pixel) == b && qAlpha(pixel) == a)
+                {
+                    result.setPixelColor(x, y, next);
+                }
+            }
+        }
+        return result;
+    }
 }

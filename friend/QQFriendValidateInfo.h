@@ -11,7 +11,6 @@
 #include <qstyleoption.h>
 
 #include "common/qqfunction.h"
-#include "common/qqglobal.h"
 
 class QQFriendValidateInfo : public QWidget
 {
@@ -19,7 +18,7 @@ class QQFriendValidateInfo : public QWidget
 	QQ_SINGLETON_CREATE(QQFriendValidateInfo)
 private:
 	explicit QQFriendValidateInfo(QWidget *parent = nullptr);
-	virtual ~QQFriendValidateInfo();
+	~QQFriendValidateInfo();
 
 public:
 	/**
@@ -27,39 +26,46 @@ public:
 	 * @param user 用户信息
 	 */
 	void setBasePeople(QQConfigs::FriendConfig *user);
+
 	/**
 	 * @brief 设置基本信息
 	 * @param group 群信息
 	 */
 	void setBaseGroup(QQConfigs::GroupConfig *group);
+
 	/**
 	 * @brief 获取基本信息
 	 * @return 基本信息
 	 */
 	QPair<QQConfigs::FriendConfig *, QQConfigs::GroupConfig *> getBaseInfo();
+
 	/**
 	 * @brief 添加验证信息
 	 * @param label 标签
 	 * @param widget 控件
 	 */
 	void addValidate(QLabel *label, QWidget *widget);
+
 	/**
 	 * @brief 添加验证信息
 	 * @param name 名称
 	 * @param widget 控件
 	 */
 	void addValidate(QString name, QWidget *widget);
+
 	/**
 	 * @brief 获取验证信息
 	 * @param index 索引
 	 * @return 验证信息
 	 */
 	QPair<QLabel *, QWidget *> getValidate(int index);
+
 	/**
 	 * @brief 移除验证信息
 	 * @param index 索引
 	 */
 	void removeValidate(int index);
+
 	/**
 	 * @brief 移除所有验证信息
 	 */

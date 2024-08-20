@@ -168,7 +168,7 @@ QQChat::QQChat(QWidget *parent)
 	ui->sendMsgBtn->setMask(QQFunctions::getRoundedMask(ui->sendMsgBtn->size(), 10));
 	ui->sendMsgBtn->setStyle(m_commonStyle);
 
-	qApp->installEventFilter(this);
+	// qApp->installEventFilter(this);--莫明卡顿
 	connect(ui->searchMoreBtn, &QPushButton::clicked, this, &QQChat::do_userClickSearchMore);
 	connect(m_searchMoreMenu, &QMenu::triggered, this, &QQChat::do_userClickSearchMoreAction);
 	connect(ui->indexList, &QListView::clicked, this, &QQChat::do_userClickChatIndex);
@@ -192,9 +192,6 @@ QQChat::~QQChat()
 
 bool QQChat::event(QEvent *event)
 {
-	switch (event->type())
-	{
-	}
 	return QWidget::event(event);
 }
 
@@ -232,6 +229,38 @@ bool QQChat::eventFilter(QObject *watch, QEvent *event)
 		}
 	}
 	return QWidget::eventFilter(watch, event);
+}
+
+void QQChat::resizeEvent(QResizeEvent *event)
+{
+	// for (auto item : m_slide)
+	// {
+	// 	QQConfigs::MessageConfig *message = qvariant_cast<QQConfigs::MessageConfig *>(item->data(Qt::UserRole));
+	// 	if (message == nullptr)
+	// 	{
+	// 		continue;
+	// 	}
+	// 	switch (message->m_messageType)
+	// 	{
+	// 	case QQConfigs::MessageConfig::MessageType::text:
+	// 	{
+	// 		QString text = QString::fromLocal8Bit(message->m_content.c_str());
+	// 		text = QQFunctions::getCalculateText(text, QQGlobals::g_theme->m_chat_message_text_font, ui->messageList->width() - 100);
+	// 		item->setData(text, Qt::UserRole + 3);
+	// 		break;
+	// 	}
+	// 	case QQConfigs::MessageConfig::MessageType::link:
+	// 	{
+	// 		QString link = QString::fromLocal8Bit(message->m_content.c_str());
+	// 		link = QQFunctions::getCalculateText(link, QQGlobals::g_theme->m_chat_message_link_font, ui->messageList->width() - 100);
+	// 		item->setData(link, Qt::UserRole + 3);
+	// 		break;
+	// 	}
+	// 	default:
+	// 		break;
+	// 	}
+	// }
+	return QWidget::resizeEvent(event);
 }
 
 void QQChat::sendMessageToNetWork(const QSharedPointer<QQConfigs::MessageConfig> &message)
@@ -635,9 +664,21 @@ void QQChat::loadMessages(QQConfigs::FriendConfig *user)
 	m_messageListModel->insertRows(0, user->m_msgList.count());
 	for (int i = 0; i < user->m_msgList.count(); ++i)
 	{
-		int index = user->m_msgList.count() - i - 1;
-		QSharedPointer<QQConfigs::MessageConfig> message = user->m_msgList.at(index);
-		appendMessage(message, index);
+		appendMessage(user->m_msgList.at(i), i);
+	}
+	if (user->m_msgList.count() <= MAX_SLIDE_SIZE)
+	{
+		for (int i = 0; i < user->m_msgList.count(); ++i)
+		{
+			m_slide.append(m_messageListModel->item(i));
+		}
+	}
+	else
+	{
+		for (int i = user->m_msgList.count() - MAX_SLIDE_SIZE; i < user->m_msgList.count(); ++i)
+		{
+			m_slide.append(m_messageListModel->item(i));
+		}
 	}
 }
 
@@ -647,9 +688,21 @@ void QQChat::loadMessages(QQConfigs::GroupConfig *group)
 	m_messageListModel->insertRows(0, group->m_msgList.count());
 	for (int i = 0; i < group->m_msgList.count(); ++i)
 	{
-		int index = group->m_msgList.count() - i - 1;
-		QSharedPointer<QQConfigs::MessageConfig> message = group->m_msgList.at(index);
-		appendMessage(message, index);
+		appendMessage(group->m_msgList.at(i), i);
+	}
+	if (group->m_msgList.count() <= MAX_SLIDE_SIZE)
+	{
+		for (int i = 0; i < group->m_msgList.count(); ++i)
+		{
+			m_slide.append(m_messageListModel->item(i));
+		}
+	}
+	else
+	{
+		for (int i = group->m_msgList.count() - MAX_SLIDE_SIZE; i < group->m_msgList.count(); ++i)
+		{
+			m_slide.append(m_messageListModel->item(i));
+		}
 	}
 }
 
