@@ -12,13 +12,7 @@ QQChatIndexDelegate::~QQChatIndexDelegate()
 
 void QQChatIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    QQConfigs::FriendConfig *user = qvariant_cast<QQConfigs::FriendConfig *>(index.data(Qt::UserRole));
-    QQConfigs::GroupConfig *group = qvariant_cast<QQConfigs::GroupConfig *>(index.data(Qt::UserRole));
     painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
-    if (user == nullptr && group == nullptr)
-    {
-        return;
-    }
     if (option.state & QStyle::State_MouseOver)
     {
         painter->fillRect(option.rect, QQGlobals::g_theme->m_chat_index_frame_hover_color);
@@ -83,37 +77,33 @@ void QQChatIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
     painter->restore();
 
     QRect stateRect = QRect(timeRect.left() + m_commonSpace, timeRect.bottom() + m_commonSpace, 2 * m_commonSpace, 2 * m_commonSpace);
-    int newMsgCount = index.data(Qt::UserRole + 5).toInt();
-    if (newMsgCount <= 0)
-    {
-    }
-    else if (user != nullptr && user->m_state == QQConfigs::FriendConfig::UserStateType::distrup ||
-             group != nullptr && group->m_state == QQConfigs::GroupConfig::GroupStateType::disnotice)
+    int count = index.data(Qt::UserRole + 5).toInt();
+    if (index.data(Qt::UserRole + 6).toInt())
     {
         painter->setFont(QQGlobals::g_theme->m_chat_index_count_font);
         painter->setBrush(Qt::gray);
         painter->setPen(Qt::transparent);
         painter->drawEllipse(stateRect);
         painter->setPen(QColor(255, 255, 255));
-        if (newMsgCount < 100)
+        if (count < 100)
         {
-            painter->drawText(stateRect, Qt::AlignCenter, QString::number(newMsgCount));
+            painter->drawText(stateRect, Qt::AlignCenter, QString::number(count));
         }
         else
         {
             painter->drawText(stateRect, Qt::AlignCenter, QString("99+"));
         }
     }
-    else if (newMsgCount > 0)
+    else if (count > 0)
     {
         painter->setFont(QFont("Microsoft YaHei", 7));
         painter->setBrush(Qt::red);
         painter->setPen(Qt::transparent);
         painter->drawEllipse(stateRect);
         painter->setPen(QColor(255, 255, 255));
-        if (newMsgCount < 100)
+        if (count < 100)
         {
-            painter->drawText(stateRect, Qt::AlignCenter, QString::number(newMsgCount));
+            painter->drawText(stateRect, Qt::AlignCenter, QString::number(count));
         }
         else
         {

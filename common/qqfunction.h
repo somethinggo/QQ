@@ -12,6 +12,7 @@
 #include <qjsonobject.h>
 #include <qjsondocument.h>
 #include <qjsonarray.h>
+#include <qcryptographichash.h>
 #include <functional>
 
 #include "qqenum.h"
@@ -22,20 +23,6 @@ namespace QQFunctions
 	void initSystem();
 
 	void exitSystem();
-
-	/**
-	 * @brief 获取用户信息
-	 * @param ID 用户ID
-	 * @return 用户信息
-	 */
-	QQConfigs::FriendConfig *getUserInfo(const QString &ID);
-
-	/**
-	 * @brief 获取群信息
-	 * @param ID 群ID
-	 * @return 群信息
-	 */
-	QQConfigs::GroupConfig *getGroupInfo(const QString &ID);
 
 	/**
 	 * @brief 获取圆角图片
@@ -132,6 +119,12 @@ namespace QQFunctions
 	 * @param next 新颜色
 	 */
 	QImage getFillImage(const QImage &image, const QColor &pre, const QColor &next);
+
+	/**
+	 * @brief 获取一个唯一的哈希ID
+	 * @param data 数据
+	 */
+	QString getUniqueHashID(const QVariantList &data);
 
 }
 

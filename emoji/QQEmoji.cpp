@@ -195,7 +195,15 @@ void QQEmoji::initEmojiView()
 	insertData(1, item);
 	qobject_cast<QTableView *>(m_stackedWidget->widget(1))->setIndexWidget(m_models[1].first->indexFromItem(item), appendEmojiButton);
 	connect(appendEmojiButton, &QPushButton::clicked, this, &QQEmoji::do_emojiAppendBtnClicked);
-	QQ_SEND_EVENT(QQEnums::loademoji);
+
+	QJsonObject sendData;
+	sendData.insert("version", *(QQGlobals::g_version));
+	sendData.insert("sender", "emoji");
+	sendData.insert("receiver", "storage");
+	sendData.insert("action", "load");
+	sendData.insert("data", QJsonObject());
+	QQ_SEND_EVENT_GLOBAL(QQEnums::loadstorage, QJsonDocument(sendData).toJson());
+
 	for (int i = 0; i < m_stackedWidget->count(); ++i)
 	{
 		QTableView *tableView = qobject_cast<QTableView *>(m_stackedWidget->widget(i));
@@ -211,7 +219,6 @@ bool QQEmoji::event(QEvent *event)
 {
 	switch (event->type())
 	{
-		QQ_HANDLE_EVENT_THIS(QQEnums::loademoji, loadEmojiData);
 	default:
 		break;
 	}

@@ -87,10 +87,12 @@ private:                                                 \
  * @brief 发送事件宏
  * @note 有可能有缺陷(可能会导致界面卡顿)
  */
-#define QQ_SEND_EVENT(EventName, Data) \
-	QCoreApplication::postEvent(QCoreApplication::instance(), new EventName(Data));
+#define QQ_SEND_EVENT(Reciver, EventName, Data) \
+	QCoreApplication::postEvent(Reciver, new EventName(Data));
 #define QQ_SEND_EVENT_NODATA(EventName) \
 	QQ_SEND_EVENT(EventName, QByteArray());
+#define QQ_SEND_EVENT_GLOBAL(EventName, Data) \
+	QCoreApplication::postEvent(QCoreApplication::instance(), new EventName(Data));
 
 /**
  * @brief 处理事件宏

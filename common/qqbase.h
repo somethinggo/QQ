@@ -89,10 +89,10 @@ namespace QQBaseConfigs
 		};
 		enum class SenderType : char
 		{
+			me,
+			she,
 			system,
 			time,
-			me,
-			she
 		};
 		MessageType m_messageType = MessageType::text;
 		SenderType m_senderType = SenderType::me;

@@ -21,9 +21,9 @@ namespace QQConfigs
 	typedef struct FriendConfig : public UserConfig
 	{
 		QString m_nickname;
-		uint64_t m_newMsgCount;
-		QString m_lastMsg;
-		QDateTime m_lastMsgTime;
+		uint64_t m_count;
+		QString m_message;
+		QDateTime m_time;
 		QString m_group;
 		QList<QSharedPointer<MessageConfig>> m_msgList;
 	} FriendConfig;
@@ -32,10 +32,10 @@ namespace QQConfigs
 	typedef struct GroupConfig : public QQBaseConfigs::GroupBaseConfig
 	{
 		QString m_nickname;
-		QString m_myNickname;
-		uint64_t m_newMsgCount;
-		QString m_lastMsg;
-		QDateTime m_lastMsgTime;
+		QString m_byname;
+		uint64_t m_count;
+		QString m_message;
+		QDateTime m_time;
 		QString m_group;
 		QList<QSharedPointer<MessageConfig>> m_msgList;
 	} GroupConfig;

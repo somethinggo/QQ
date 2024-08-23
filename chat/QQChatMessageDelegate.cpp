@@ -10,16 +10,11 @@ QQChatMessageDelegate::~QQChatMessageDelegate()
 
 void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    QQConfigs::MessageConfig *message = qvariant_cast<QQConfigs::MessageConfig *>(index.data(Qt::UserRole));
-    if (message == nullptr)
-    {
-        return QStyledItemDelegate::paint(painter, option, index);
-    }
     painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
 
-    switch (message->m_senderType)
+    switch (index.data(Qt::UserRole + 1).toInt())
     {
-    case QQConfigs::MessageConfig::SenderType::me:
+    case static_cast<int>(QQConfigs::MessageConfig::SenderType::me):
     {
         painter->save();
         QPixmap icon = index.data(Qt::UserRole + 1).value<QPixmap>();
@@ -36,9 +31,9 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
         painter->drawText(nameRect, Qt::AlignCenter, name);
         painter->restore();
         QRect frame;
-        switch (message->m_messageType)
+        switch (index.data(Qt::UserRole + 2).toInt())
         {
-        case QQConfigs::MessageConfig::MessageType::text:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::text):
         {
             painter->save();
             painter->setPen(QQGlobals::g_theme->m_chat_message_text_color);
@@ -55,7 +50,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             painter->restore();
             break;
         }
-        case QQConfigs::MessageConfig::MessageType::image:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::image):
         {
             painter->save();
             QPixmap image = index.data(Qt::UserRole + 4).value<QPixmap>();
@@ -64,7 +59,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             painter->restore();
             break;
         }
-        case QQConfigs::MessageConfig::MessageType::file:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::file):
         {
             painter->save();
             frame = QRect(QPoint(option.rect.width() - m_contentMargin - QQGlobals::g_theme->m_chat_message_file_frame_size.width(), nameRect.bottom() + m_nameMargin),
@@ -75,7 +70,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
 
             painter->setPen(QQGlobals::g_theme->m_chat_message_file_name_color);
             painter->setFont(QQGlobals::g_theme->m_chat_message_file_name_font);
-            QFileInfo fileInfo(QString::fromLocal8Bit(message->m_content.c_str()));
+            QFileInfo fileInfo(index.data(Qt::UserRole + 3).toString());
             QRect fileNameRect = QQFunctions::getCalculateTextRect(fileInfo.fileName(), painter->font());
             fileNameRect.moveTopLeft(frame.topLeft() + QPoint(1.5 * m_contentPadding, 1.5 * m_contentPadding));
             painter->drawText(fileNameRect, fileInfo.fileName(), Qt::AlignLeft | Qt::AlignCenter);
@@ -87,14 +82,14 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
 
             painter->setPen(QQGlobals::g_theme->m_chat_message_file_size_color);
             painter->setFont(QQGlobals::g_theme->m_chat_message_file_size_font);
-            QString fileSize = index.data(Qt::UserRole + 3).toString();
+            QString fileSize = index.data(Qt::UserRole + 10).toString();
             QRect fileSizeRect = QQFunctions::getCalculateTextRect(fileSize, painter->font());
             fileSizeRect.moveTopLeft(QPoint(frame.left() + 1.5 * m_contentPadding, frame.bottom() - 1.5 * m_contentPadding - fileSizeRect.height()));
             painter->drawText(fileSizeRect, Qt::AlignCenter, fileSize);
             painter->restore();
             break;
         }
-        case QQConfigs::MessageConfig::MessageType::link:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::link):
         {
             painter->save();
             painter->setPen(QQGlobals::g_theme->m_chat_message_link_color);
@@ -113,38 +108,38 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             painter->restore();
             break;
         }
-        case QQConfigs::MessageConfig::MessageType::emoji:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::emoji):
         {
-            QString emoji = index.data(Qt::UserRole + 3).toString();
-            painter->save();
-            QString emojiType = emoji.split(",")[0].split(":")[1];
-            QString emojiData = emoji.split(",")[1].split(":")[1];
-            if (emojiType == "unicode")
-            {
-                painter->setFont(QQGlobals::g_theme->m_chat_message_emoji_font);
-                QRect emojiRect = QQFunctions::getCalculateTextRect(emojiData, painter->font());
-                frame = QRect(0, 0, emojiRect.width() + 2 * m_contentPadding, emojiRect.height() + 2 * m_contentPadding);
-                frame.moveTopLeft(QPoint(option.rect.width() - m_contentMargin - frame.width(), nameRect.bottom() + m_nameMargin));
-                emojiRect.moveTopLeft(frame.topLeft() + QPoint(m_contentPadding, m_contentPadding));
-                QPainterPath path;
-                path.addRoundedRect(frame, 10, 10);
-                painter->fillPath(path, Qt::white);
-                painter->drawText(emojiRect, emojiData);
-            }
-            painter->restore();
+            // QString emoji = index.data(Qt::UserRole + 3).toString();
+            // painter->save();
+            // QString emojiType = emoji.split(",")[0].split(":")[1];
+            // QString emojiData = emoji.split(",")[1].split(":")[1];
+            // if (emojiType == "unicode")
+            // {
+            //     painter->setFont(QQGlobals::g_theme->m_chat_message_emoji_font);
+            //     QRect emojiRect = QQFunctions::getCalculateTextRect(emojiData, painter->font());
+            //     frame = QRect(0, 0, emojiRect.width() + 2 * m_contentPadding, emojiRect.height() + 2 * m_contentPadding);
+            //     frame.moveTopLeft(QPoint(option.rect.width() - m_contentMargin - frame.width(), nameRect.bottom() + m_nameMargin));
+            //     emojiRect.moveTopLeft(frame.topLeft() + QPoint(m_contentPadding, m_contentPadding));
+            //     QPainterPath path;
+            //     path.addRoundedRect(frame, 10, 10);
+            //     painter->fillPath(path, Qt::white);
+            //     painter->drawText(emojiRect, emojiData);
+            // }
+            // painter->restore();
             break;
         }
         default:
             break;
         }
-        if (index.data(Qt::UserRole + 5).toBool())
+        if (index.data(Qt::UserRole + 7).toBool())
         {
             QRect stateRect = QRect(QPoint(0, 0), QQGlobals::g_theme->m_chat_message_state_icon_size);
             stateRect.moveBottom(frame.bottom());
             stateRect.moveLeft(frame.left() - QQGlobals::g_theme->m_chat_message_state_icon_size.width() - m_nameMargin);
             painter->drawPixmap(stateRect, QQGlobals::g_theme->m_chat_message_state_icon.pixmap(QQGlobals::g_theme->m_chat_message_state_icon_size));
         }
-        else if (!message->m_isSended)
+        else if (!index.data(Qt::UserRole + 8).toBool())
         {
             QRect stateRect = QRect(QPoint(0, 0), QQGlobals::g_theme->m_chat_message_state_icon_size);
             stateRect.moveBottom(frame.bottom());
@@ -153,7 +148,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
         }
         break;
     }
-    case QQConfigs::MessageConfig::SenderType::she:
+    case static_cast<int>(QQConfigs::MessageConfig::SenderType::she):
     {
         painter->save();
         QPixmap icon = index.data(Qt::UserRole + 1).value<QPixmap>();
@@ -170,9 +165,9 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
         painter->drawText(nameRect, Qt::AlignCenter, name);
         painter->restore();
 
-        switch (message->m_messageType)
+        switch (index.data(Qt::UserRole + 2).toInt())
         {
-        case QQConfigs::MessageConfig::MessageType::text:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::text):
         {
             painter->save();
             painter->setPen(QQGlobals::g_theme->m_chat_message_text_color);
@@ -189,7 +184,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             painter->restore();
             break;
         }
-        case QQConfigs::MessageConfig::MessageType::image:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::image):
         {
             painter->save();
             QPixmap image = index.data(Qt::UserRole + 4).value<QPixmap>();
@@ -198,7 +193,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             painter->restore();
             break;
         }
-        case QQConfigs::MessageConfig::MessageType::file:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::file):
         {
             painter->save();
             QRect frame = QRect(QPoint(m_contentMargin, nameRect.bottom() + m_nameMargin), QQGlobals::g_theme->m_chat_message_file_frame_size);
@@ -208,7 +203,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
 
             painter->setPen(QQGlobals::g_theme->m_chat_message_file_name_color);
             painter->setFont(QQGlobals::g_theme->m_chat_message_file_name_font);
-            QFileInfo fileInfo(QString::fromLocal8Bit(message->m_content.c_str()));
+            QFileInfo fileInfo(index.data(Qt::UserRole + 3).toString());
             QRect fileNameRect = QQFunctions::getCalculateTextRect(fileInfo.fileName(), painter->font());
             fileNameRect.moveTopLeft(frame.topLeft() + QPoint(1.5 * m_contentPadding, 1.5 * m_contentPadding));
             painter->drawText(fileNameRect, fileInfo.fileName(), Qt::AlignLeft | Qt::AlignCenter);
@@ -218,7 +213,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             QPixmap fileIcon = index.data(Qt::UserRole + 4).value<QPixmap>();
             painter->drawPixmap(fileIconRect, fileIcon);
 
-            if (message->m_isDownLoaded.has_value() && !message->m_isDownLoaded)
+            if (index.data(Qt::UserRole + 9).toInt() == 0)
             {
                 painter->save();
                 QPainterPath iconPath;
@@ -233,7 +228,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
                 painter->drawPixmap(fileDownLoadIconRect, QPixmap(":/file/images/file/download.png"));
                 painter->restore();
             }
-            else if (index.data(Qt::UserRole + 6).toInt() != 100)
+            else if (index.data(Qt::UserRole + 9).toInt() != 100)
             {
                 painter->save();
                 QPainterPath iconPath;
@@ -251,14 +246,14 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
 
             painter->setPen(QQGlobals::g_theme->m_chat_message_file_size_color);
             painter->setFont(QQGlobals::g_theme->m_chat_message_file_size_font);
-            QString fileSize = index.data(Qt::UserRole + 3).toString();
+            QString fileSize = index.data(Qt::UserRole + 10).toString();
             QRect fileSizeRect = QQFunctions::getCalculateTextRect(fileSize, painter->font());
             fileSizeRect.moveTopLeft(QPoint(frame.left() + 1.5 * m_contentPadding, frame.bottom() - 1.5 * m_contentPadding - fileSizeRect.height()));
             painter->drawText(fileSizeRect, fileSize);
             painter->restore();
             break;
         }
-        case QQConfigs::MessageConfig::MessageType::link:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::link):
         {
             painter->save();
             painter->setPen(QQGlobals::g_theme->m_chat_message_link_color);
@@ -277,25 +272,25 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             painter->restore();
             break;
         }
-        case QQConfigs::MessageConfig::MessageType::emoji:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::emoji):
         {
-            QString textContent = index.data(Qt::UserRole + 3).toString();
-            painter->save();
-            QString emojiType = textContent.split(",")[0].split(":")[1];
-            QString emojiData = textContent.split(",")[1].split(":")[1];
-            if (emojiType == "unicode")
-            {
-                painter->setFont(QFont("Segoe UI Emoji", 15));
-                QRect emojiRect = QQFunctions::getCalculateTextRect(emojiData, painter->font());
-                QRect frame = QRect(0, 0, emojiRect.width() + 2 * m_contentPadding, emojiRect.height() + 2 * m_contentPadding);
-                frame.moveTopLeft(QPoint(m_contentMargin, nameRect.bottom() + m_nameMargin));
-                emojiRect.moveTopLeft(frame.topLeft() + QPoint(m_contentPadding, m_contentPadding));
-                QPainterPath path;
-                path.addRoundedRect(frame, 10, 10);
-                painter->fillPath(path, Qt::white);
-                painter->drawText(emojiRect, emojiData);
-            }
-            painter->restore();
+            // QString textContent = index.data(Qt::UserRole + 3).toString();
+            // painter->save();
+            // QString emojiType = textContent.split(",")[0].split(":")[1];
+            // QString emojiData = textContent.split(",")[1].split(":")[1];
+            // if (emojiType == "unicode")
+            // {
+            //     painter->setFont(QFont("Segoe UI Emoji", 15));
+            //     QRect emojiRect = QQFunctions::getCalculateTextRect(emojiData, painter->font());
+            //     QRect frame = QRect(0, 0, emojiRect.width() + 2 * m_contentPadding, emojiRect.height() + 2 * m_contentPadding);
+            //     frame.moveTopLeft(QPoint(m_contentMargin, nameRect.bottom() + m_nameMargin));
+            //     emojiRect.moveTopLeft(frame.topLeft() + QPoint(m_contentPadding, m_contentPadding));
+            //     QPainterPath path;
+            //     path.addRoundedRect(frame, 10, 10);
+            //     painter->fillPath(path, Qt::white);
+            //     painter->drawText(emojiRect, emojiData);
+            // }
+            // painter->restore();
             break;
         }
         default:
@@ -303,7 +298,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
         }
         break;
     }
-    case QQConfigs::MessageConfig::SenderType::system:
+    case static_cast<int>(QQConfigs::MessageConfig::SenderType::system):
     {
         painter->save();
         painter->setPen(QQGlobals::g_theme->m_chat_message_system_color);
@@ -316,7 +311,7 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
         painter->restore();
         break;
     }
-    case QQConfigs::MessageConfig::SenderType::time:
+    case static_cast<int>(QQConfigs::MessageConfig::SenderType::time):
     {
         painter->save();
         painter->setPen(QQGlobals::g_theme->m_chat_message_time_color);
@@ -336,52 +331,47 @@ void QQChatMessageDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
 
 QSize QQChatMessageDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    QQConfigs::MessageConfig *message = qvariant_cast<QQConfigs::MessageConfig *>(index.data(Qt::UserRole));
-    if (message == nullptr)
+    switch (index.data(Qt::UserRole + 1).toInt())
     {
-        return QStyledItemDelegate::sizeHint(option, index);
-    }
-    switch (message->m_senderType)
-    {
-    case QQConfigs::MessageConfig::SenderType::me:
-    case QQConfigs::MessageConfig::SenderType::she:
+    case static_cast<int>(QQConfigs::MessageConfig::SenderType::me):
+    case static_cast<int>(QQConfigs::MessageConfig::SenderType::she):
     {
         int height = 0;
-        switch (message->m_messageType)
+        switch (index.data(Qt::UserRole + 2).toInt())
         {
-        case QQConfigs::MessageConfig::MessageType::text:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::text):
         {
             QRect textRect = QQFunctions::getCalculateTextRect(index.data(Qt::UserRole + 3).toString(), QQGlobals::g_theme->m_chat_message_text_font);
             height = textRect.height() + 2 * m_contentPadding;
             break;
         }
-        case QQConfigs::MessageConfig::MessageType::image:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::image):
         {
             QPixmap image = index.data(Qt::UserRole + 4).value<QPixmap>();
             height = image.size().height();
             break;
         }
-        case QQConfigs::MessageConfig::MessageType::file:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::file):
         {
             height = QQGlobals::g_theme->m_chat_message_file_frame_size.height();
             break;
         }
-        case QQConfigs::MessageConfig::MessageType::link:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::link):
         {
             QRect linkRect = QQFunctions::getCalculateTextRect(index.data(Qt::UserRole + 3).toString(), QQGlobals::g_theme->m_chat_message_link_font);
             height = linkRect.height() + 2 * m_contentPadding;
             break;
         }
-        case QQConfigs::MessageConfig::MessageType::emoji:
+        case static_cast<int>(QQConfigs::MessageConfig::MessageType::emoji):
         {
-            QString textContent = index.data(Qt::UserRole + 3).toString();
-            QString emojiType = textContent.split(",")[0].split(":")[1];
-            QString emojiData = textContent.split(",")[1].split(":")[1];
-            if (emojiType == "unicode")
-            {
-                QRect emojiRect = QQFunctions::getCalculateTextRect(emojiData, QQGlobals::g_theme->m_chat_message_emoji_font);
-                height = emojiRect.height() + 2 * m_contentPadding;
-            }
+            // QString textContent = index.data(Qt::UserRole + 3).toString();
+            // QString emojiType = textContent.split(",")[0].split(":")[1];
+            // QString emojiData = textContent.split(",")[1].split(":")[1];
+            // if (emojiType == "unicode")
+            // {
+            //     QRect emojiRect = QQFunctions::getCalculateTextRect(emojiData, QQGlobals::g_theme->m_chat_message_emoji_font);
+            //     height = emojiRect.height() + 2 * m_contentPadding;
+            // }
             break;
         }
         default:
@@ -390,16 +380,18 @@ QSize QQChatMessageDelegate::sizeHint(const QStyleOptionViewItem &option, const 
         QRect nameRect = QQFunctions::getCalculateTextRect(index.data(Qt::UserRole + 2).toString(), QQGlobals::g_theme->m_chat_message_name_font);
         return QSize(option.rect.width(), height + nameRect.height() + m_iconMargin + m_nameMargin);
     }
-    case QQConfigs::MessageConfig::SenderType::system:
+    case static_cast<int>(QQConfigs::MessageConfig::SenderType::system):
     {
         QRect frame = QQFunctions::getCalculateTextRect(index.data(Qt::UserRole + 3).toString(), QQGlobals::g_theme->m_chat_message_time_font);
         return QSize(option.rect.width(), frame.height() + 2 * m_iconMargin);
     }
-    case QQConfigs::MessageConfig::SenderType::time:
+    case static_cast<int>(QQConfigs::MessageConfig::SenderType::time):
     {
         QRect frame = QQFunctions::getCalculateTextRect(index.data(Qt::UserRole + 3).toString(), QQGlobals::g_theme->m_chat_message_system_font);
         return QSize(option.rect.width(), frame.height() + 4 * m_iconMargin);
     }
-        return QStyledItemDelegate::sizeHint(option, index);
+    default:
+        break;
     }
+    return QStyledItemDelegate::sizeHint(option, index);
 }

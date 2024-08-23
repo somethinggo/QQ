@@ -21,59 +21,31 @@ namespace QQEnums
     // 事件枚举
     enum class EventType
     {
-        login,
-        logout,
-        registered,
-        findpassword,
-        accpectlogin,
-        accpectlogout,
-        accpectregistered,
-        accpectfindpassword,
-        sendtext,
-        sendimage,
-        sendlink,
-        sendemoji,
-        sendaudio,
-        sendfile,
-        sendreport,
-        searchfriend,
-        searchgroup,
-        addfriend,
-        addgroup,
-        addemoji,
-        loademoji,
-        loadmessage,
-        loadset,
-        requestaudio,
-        requestfile,
-        requestchat,
+        senduserinfo,
+        receiveuserinfo,
+        sendmessage,
+        receivemessage,
+        searchinfo,
+        addinfo,
+        receiveinfo,
+        loadstorage,
+        receivestorage,
+        savestorage,
+        requestmoudel,
+        statechange,
     };
-    QQ_REGISTER_EVENT(login, static_cast<int>(EventType::login))
-    QQ_REGISTER_EVENT(logout, static_cast<int>(EventType::logout))
-    QQ_REGISTER_EVENT(registered, static_cast<int>(EventType::registered))
-    QQ_REGISTER_EVENT(findpassword, static_cast<int>(EventType::findpassword))
-    QQ_REGISTER_EVENT(accpectlogin, static_cast<int>(EventType::accpectlogin))
-    QQ_REGISTER_EVENT(accpectlogout, static_cast<int>(EventType::accpectlogout))
-    QQ_REGISTER_EVENT(accpectregistered, static_cast<int>(EventType::accpectregistered))
-    QQ_REGISTER_EVENT(accpectfindpassword, static_cast<int>(EventType::accpectfindpassword))
-    QQ_REGISTER_EVENT(sendtext, static_cast<int>(EventType::sendtext))
-    QQ_REGISTER_EVENT(sendimage, static_cast<int>(EventType::sendimage))
-    QQ_REGISTER_EVENT(sendlink, static_cast<int>(EventType::sendlink))
-    QQ_REGISTER_EVENT(sendemoji, static_cast<int>(EventType::sendemoji))
-    QQ_REGISTER_EVENT(sendaudio, static_cast<int>(EventType::sendaudio))
-    QQ_REGISTER_EVENT(sendfile, static_cast<int>(EventType::sendfile))
-    QQ_REGISTER_EVENT(sendreport, static_cast<int>(EventType::sendreport))
-    QQ_REGISTER_EVENT(searchfriend, static_cast<int>(EventType::searchfriend))
-    QQ_REGISTER_EVENT(searchgroup, static_cast<int>(EventType::searchgroup))
-    QQ_REGISTER_EVENT(addfriend, static_cast<int>(EventType::addfriend))
-    QQ_REGISTER_EVENT(addgroup, static_cast<int>(EventType::addgroup))
-    QQ_REGISTER_EVENT(addemoji, static_cast<int>(EventType::addemoji))
-    QQ_REGISTER_EVENT(loademoji, static_cast<int>(EventType::loademoji))
-    QQ_REGISTER_EVENT(loadmessage, static_cast<int>(EventType::loadmessage))
-    QQ_REGISTER_EVENT(loadset, static_cast<int>(EventType::loadset))
-    QQ_REGISTER_EVENT(requestaudio, static_cast<int>(EventType::requestaudio))
-    QQ_REGISTER_EVENT(requestfile, static_cast<int>(EventType::requestfile))
-    QQ_REGISTER_EVENT(requestchat, static_cast<int>(EventType::requestchat))
+    QQ_REGISTER_EVENT(senduserinfo, static_cast<int>(EventType::senduserinfo))
+    QQ_REGISTER_EVENT(receiveuserinfo, static_cast<int>(EventType::receiveuserinfo))
+    QQ_REGISTER_EVENT(sendmessage, static_cast<int>(EventType::sendmessage))
+    QQ_REGISTER_EVENT(receivemessage, static_cast<int>(EventType::receivemessage))
+    QQ_REGISTER_EVENT(searchinfo, static_cast<int>(EventType::searchinfo))
+    QQ_REGISTER_EVENT(addinfo, static_cast<int>(EventType::addinfo))
+    QQ_REGISTER_EVENT(receiveinfo, static_cast<int>(EventType::receiveinfo))
+    QQ_REGISTER_EVENT(loadstorage, static_cast<int>(EventType::loadstorage))
+    QQ_REGISTER_EVENT(receivestorage, static_cast<int>(EventType::receivestorage))
+    QQ_REGISTER_EVENT(savestorage, static_cast<int>(EventType::savestorage))
+    QQ_REGISTER_EVENT(requestmoudel, static_cast<int>(EventType::requestmoudel))
+    QQ_REGISTER_EVENT(statechange, static_cast<int>(EventType::statechange))
 
     // 方向枚举
     enum class DirectionType : char

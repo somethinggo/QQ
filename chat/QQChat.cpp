@@ -10,10 +10,6 @@ void QQChatProxyStyle::drawPrimitive(PrimitiveElement element, const QStyleOptio
 	{
 		return;
 	}
-	else if (element == PE_FrameGroupBox)
-	{
-		return;
-	}
 	return QProxyStyle::drawPrimitive(element, option, painter, widget);
 }
 
@@ -49,46 +45,35 @@ void QQChatProxyStyle::drawControl(ControlElement element, const QStyleOption *o
 				painter->fillRect(option->rect, color);
 			}
 		}
-		// 鼠标移入与按下改变图片
-		if (name == "emojiBtn" ||
-			name == "fileBtn" ||
-			name == "pictureBtn" ||
-			name == "upperBtn" ||
-			name == "fontBtn" ||
-			name == "historyBtn" ||
-			name == "goToAudioTabBtn")
+		if (buttonOption && (buttonOption->state & State_MouseOver))
 		{
-			if (buttonOption && (buttonOption->state & State_MouseOver))
+			buttonOption->state &= ~State_MouseOver;
+			if (!buttonOption->icon.isNull())
 			{
-				buttonOption->state &= ~State_MouseOver;
-				if (!buttonOption->icon.isNull())
-				{
-					buttonOption->icon = buttonOption->icon.pixmap(buttonOption->iconSize, QIcon::Active, QIcon::On);
-				}
-			}
-			if (buttonOption && (buttonOption->state & State_Sunken))
-			{
-				buttonOption->state &= ~State_Sunken;
-				buttonOption->state &= ~State_MouseOver;
-				if (!buttonOption->icon.isNull())
-				{
-					buttonOption->icon = buttonOption->icon.pixmap(buttonOption->iconSize, QIcon::Active, QIcon::On);
-				}
+				buttonOption->icon = buttonOption->icon.pixmap(buttonOption->iconSize, QIcon::Active, QIcon::On);
 			}
 		}
-		// 选中的背景板
-		if (name == "upperBtn")
+		if (buttonOption && (buttonOption->state & State_Sunken))
 		{
-			if (buttonOption && (buttonOption->state & State_On))
+			buttonOption->state &= ~State_Sunken;
+			buttonOption->state &= ~State_MouseOver;
+			if (!buttonOption->icon.isNull())
 			{
-				buttonOption->state &= ~State_On;
 				buttonOption->icon = buttonOption->icon.pixmap(buttonOption->iconSize, QIcon::Active, QIcon::On);
-				painter->save();
-				painter->setRenderHint(QPainter::Antialiasing);
-				painter->setPen(Qt::NoPen);
-				painter->setBrush(QColor("#CCE4F7"));
-				painter->drawEllipse(option->rect);
-				painter->restore();
+			}
+		}
+		if (buttonOption && (buttonOption->state & State_On))
+		{
+			buttonOption->state &= ~State_On;
+			painter->save();
+			painter->setRenderHint(QPainter::Antialiasing);
+			painter->setPen(Qt::NoPen);
+			painter->setBrush(QColor("#CCE4F7"));
+			painter->drawEllipse(option->rect);
+			painter->restore();
+			if (!buttonOption->icon.isNull())
+			{
+				buttonOption->icon = buttonOption->icon.pixmap(buttonOption->iconSize, QIcon::Active, QIcon::On);
 			}
 		}
 	}
@@ -100,23 +85,17 @@ QRect QQChatProxyStyle::subElementRect(SubElement element, const QStyleOption *o
 	QString name = widget->objectName();
 	if (element == SE_ShapedFrameContents)
 	{
-		if (name == "nicknameLab")
-		{
-			QRect rect = QProxyStyle::subElementRect(element, option, widget);
-			const int padding = 25;
-			rect.adjust(padding, 0, 0, 0);
-			return rect;
-		}
+		QRect rect = QProxyStyle::subElementRect(element, option, widget);
+		const int padding = 25;
+		rect.adjust(padding, 0, 0, 0);
+		return rect;
 	}
 	else if (element == SE_FrameContents)
 	{
-		if (name == "textInput")
-		{
-			QRect rect = QProxyStyle::subElementRect(element, option, widget);
-			const int padding = 25;
-			rect.adjust(padding, 0, -padding, 0);
-			return rect;
-		}
+		QRect rect = QProxyStyle::subElementRect(element, option, widget);
+		const int padding = 25;
+		rect.adjust(padding, 0, -padding, 0);
+		return rect;
 	}
 	return QProxyStyle::subElementRect(element, option, widget);
 }
@@ -168,7 +147,16 @@ QQChat::QQChat(QWidget *parent)
 	ui->sendMsgBtn->setMask(QQFunctions::getRoundedMask(ui->sendMsgBtn->size(), 10));
 	ui->sendMsgBtn->setStyle(m_commonStyle);
 
-	// qApp->installEventFilter(this);--莫明卡顿
+	// 请求同步本地存储聊天索引数据
+	QJsonObject sendData;
+	sendData.insert("version", *(QQGlobals::g_version));
+	sendData.insert("sender", "chat");
+	sendData.insert("receiver", "storage");
+	sendData.insert("action", "loadindex");
+	sendData.insert("data", QJsonObject());
+	QQ_SEND_EVENT_GLOBAL(QQEnums::sendmessage, QJsonDocument(sendData).toJson());
+
+	this->installEventFilter(this);
 	connect(ui->searchMoreBtn, &QPushButton::clicked, this, &QQChat::do_userClickSearchMore);
 	connect(m_searchMoreMenu, &QMenu::triggered, this, &QQChat::do_userClickSearchMoreAction);
 	connect(ui->indexList, &QListView::clicked, this, &QQChat::do_userClickChatIndex);
@@ -192,6 +180,23 @@ QQChat::~QQChat()
 
 bool QQChat::event(QEvent *event)
 {
+	switch (event->type())
+	{
+		QQ_HANDLE_EVENT_THIS(QQEnums::receivemessage, handleNetwork)
+		QQ_HANDLE_EVENT_THIS(QQEnums::receivestorage, handleStorage)
+	case QQEnums::requestmoudel::EventType:
+	{
+		QJsonObject receiveData = QJsonDocument::fromJson(static_cast<QQEnums::requestmoudel *>(event)->data).object();
+		if (receiveData["receiver"].toString() == QString("friend"))
+		{
+			this->handleFriend(static_cast<QQEnums::requestmoudel *>(event)->data);
+		}
+		else if (receiveData["receiver"].toString() == QString("emoji"))
+		{
+			this->handleEmoji(static_cast<QQEnums::requestmoudel *>(event)->data);
+		}
+	};
+	}
 	return QWidget::event(event);
 }
 
@@ -263,76 +268,49 @@ void QQChat::resizeEvent(QResizeEvent *event)
 	return QWidget::resizeEvent(event);
 }
 
-void QQChat::sendMessageToNetWork(const QSharedPointer<QQConfigs::MessageConfig> &message)
+void QQChat::sendMessageToNetWork(const QVariantMap &message)
 {
 	QJsonObject sendData;
-	sendData.insert("version", "1.0");
+	sendData.insert("version", *(QQGlobals::g_version));
 	sendData.insert("sender", "chat");
-	switch (message->m_messageType)
-	{
-	case QQConfigs::MessageConfig::MessageType::text:
-	{
-		sendData.insert("type", "text");
-		break;
-	}
-	case QQConfigs::MessageConfig::MessageType::image:
-	{
-		sendData.insert("type", "image");
-		break;
-	}
-	case QQConfigs::MessageConfig::MessageType::link:
-	{
-		sendData.insert("type", "link");
-		break;
-	}
-	}
+	sendData.insert("receiver", "network");
+	sendData.insert("action", "sendmessage");
+	// todo-使用反射序列化对象
 	QJsonObject data;
-	data.insert("senderID", QString::fromStdString(message->m_senderID));
-	data.insert("receiverID", QString::fromStdString(message->m_receiverID));
-	data.insert("content", QString::fromStdString(message->m_content));
-	data.insert("time", QString::number(message->m_time));
+	QString type = QMetaEnum::fromType<QQEnums::MessageTypes>().valueToKey(message["type"].toInt());
+	data.insert("type", type);
+	data.insert("sender", message["sender"].toString());
+	data.insert("receiver", message["receiver"].toString());
+	data.insert("content", message["content"].toString());
+	data.insert("time", message["time"].toString());
 	sendData.insert("data", data);
-	switch (message->m_messageType)
-	{
-	case QQConfigs::MessageConfig::MessageType::text:
-	{
-		QQ_SEND_EVENT(QQEnums::sendtext, QJsonDocument(sendData).toJson());
-		break;
-	}
-	case QQConfigs::MessageConfig::MessageType::image:
-	{
-		QQ_SEND_EVENT(QQEnums::sendimage, QJsonDocument(sendData).toJson());
-		break;
-	}
-	case QQConfigs::MessageConfig::MessageType::link:
-	{
-		QQ_SEND_EVENT(QQEnums::sendlink, QJsonDocument(sendData).toJson());
-		break;
-	}
-	}
+	QQ_SEND_EVENT_GLOBAL(QQEnums::sendmessage, QJsonDocument(sendData).toJson());
+	sendData.insert("receiver", "storage");
+	QQ_SEND_EVENT_GLOBAL(QQEnums::sendmessage, QJsonDocument(sendData).toJson());
 }
 
-void QQChat::loadPeopleInModelItem(QStandardItem *item, QQConfigs::FriendConfig *user)
+void QQChat::loadPeopleInModelItem(QStandardItem *item, const QVariantMap &data)
 {
-	item->setData(QVariant::fromValue(user), Qt::UserRole);
+	item->setData(data["ID"].toString(), Qt::UserRole);
 
-	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(user->m_icon)));
+	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(data["icon"].toString()));
 	icon = QQFunctions::getRoundedPixmap(icon.scaled(QQGlobals::g_theme->m_chat_index_icon_size, Qt::KeepAspectRatio), QQGlobals::g_theme->m_chat_index_icon_size.width() / 2);
 	item->setData(icon, Qt::UserRole + 1);
 
-	QString name = QString::fromLocal8Bit(user->m_name.c_str());
-	if (!user->m_nickname.isNull())
+	QString name = data["name"].toString();
+	if (!data["nickname"].toString().isNull())
 	{
-		name = user->m_nickname;
+		name = data["nickname"].toString();
 	}
 	name = QQFunctions::getCalculateText(name, QQGlobals::g_theme->m_chat_index_name_font, m_indexListDelegate->getItemSize().width() - 100, true);
+
 	item->setData(name, Qt::UserRole + 2);
 
-	QString lastMsg = user->m_lastMsg;
+	QString lastMsg = data["message"].toString();
 	lastMsg = QQFunctions::getCalculateText(lastMsg, QQGlobals::g_theme->m_chat_index_message_font, m_indexListDelegate->getItemSize().width() - 100, true);
 	item->setData(lastMsg, Qt::UserRole + 3);
 
-	QString time = user->m_lastMsgTime.toString();
+	QString time = data["time"].toString();
 	qint64 daysDiff = QDateTime::fromString(time).secsTo(QDateTime::currentDateTime()) / (24 * 3600);
 	if (daysDiff < 1)
 	{
@@ -375,136 +353,75 @@ void QQChat::loadPeopleInModelItem(QStandardItem *item, QQConfigs::FriendConfig 
 	}
 	item->setData(time, Qt::UserRole + 4);
 
-	item->setData(user->m_newMsgCount, Qt::UserRole + 5);
+	item->setData(data["count"].toInt(), Qt::UserRole + 5);
 }
 
-void QQChat::loadPeopleInModelItem(QStandardItem *item, QQConfigs::GroupConfig *group)
+void QQChat::loadMessageInModelItem(QStandardItem *item, const QVariantMap &data)
 {
-	item->setData(QVariant::fromValue(group), Qt::UserRole);
-
-	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(group->m_icon)));
-	icon = QQFunctions::getRoundedPixmap(icon.scaled(QQGlobals::g_theme->m_chat_index_icon_size, Qt::KeepAspectRatio), QQGlobals::g_theme->m_chat_index_icon_size.width() / 2);
-	item->setData(icon, Qt::UserRole + 1);
-
-	QString name = QString::fromLocal8Bit(group->m_name.c_str());
-	if (!group->m_nickname.isNull())
+	item->setData(data["ID"], Qt::UserRole);
+	item->setData(data["sender"].toInt(), Qt::UserRole + 1);
+	item->setData(data["type"].toInt(), Qt::UserRole + 2);
+	switch (data["sender"].toInt())
 	{
-		name = group->m_nickname;
-	}
-	name = QQFunctions::getCalculateText(name, QQGlobals::g_theme->m_chat_index_name_font, m_indexListDelegate->getItemSize().width() - 100, true);
-	item->setData(group->m_lastMsg, Qt::UserRole + 2);
+	case static_cast<int>(QQConfigs::MessageConfig::SenderType::me):
+	case static_cast<int>(QQConfigs::MessageConfig::SenderType::she):
+	{
+		// todo-从本地缓存中根据ID号获取用户信息
+		// QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(data["icon"].toString()));
+		// icon = QQFunctions::getRoundedPixmap(icon.scaled(QQGlobals::g_theme->m_chat_message_icon_size, Qt::KeepAspectRatio), QQGlobals::g_theme->m_chat_message_icon_size.width() / 2);
+		// item->setData(icon, Qt::UserRole + 1);
 
-	QString lastMsg = group->m_lastMsg;
-	lastMsg = QQFunctions::getCalculateText(lastMsg, QQGlobals::g_theme->m_chat_index_message_font, m_indexListDelegate->getItemSize().width() - 100, true);
-	item->setData(lastMsg, Qt::UserRole + 3);
-
-	QString time = group->m_lastMsgTime.toString();
-	qint64 daysDiff = QDateTime::fromString(time).secsTo(QDateTime::currentDateTime()) / (24 * 3600);
-	if (daysDiff < 1)
-	{
-		time = QDateTime::fromString(time).toString("HH:mm");
-	}
-	else if (daysDiff < 2)
-	{
-		time = "昨天";
-	}
-	else if (daysDiff < 7)
-	{
-		switch (QDateTime::fromString(time).date().dayOfWeek())
+		// if (data["sender"].toInt() == 1)
+		// {
+		// 	QString nickname;
+		// 	if (!nickname.isEmpty())
+		// 	{
+		// 		item->setData(nickname, Qt::UserRole + 2);
+		// 	}
+		// 	else
+		// 	{
+		// 		// item->setData(QString::fromLocal8Bit(QQFunctions::getUserInfo(QString::fromStdString(message->m_senderID))->m_name.c_str()), Qt::UserRole + 2);
+		// 	}
+		// }
+		switch (data["type"].toInt())
 		{
-		case 1:
-			time = "星期一";
-			break;
-		case 2:
-			time = "星期二";
-			break;
-		case 3:
-			time = "星期三";
-			break;
-		case 4:
-			time = "星期四";
-			break;
-		case 5:
-			time = "星期五";
-			break;
-		case 6:
-			time = "星期六";
-			break;
-		case 7:
-			time = "星期日";
-			break;
-		}
-	}
-	else
-	{
-		time = QDateTime::fromString(time).toString("yyyy/MM/dd");
-	}
-	item->setData(time, Qt::UserRole + 4);
-
-	item->setData(group->m_newMsgCount, Qt::UserRole + 5);
-}
-
-void QQChat::loadMessageInModelItem(QStandardItem *item, const QSharedPointer<QQConfigs::MessageConfig> &message)
-{
-	item->setData(QVariant::fromValue(message.data()), Qt::UserRole);
-	switch (message->m_senderType)
-	{
-	case QQConfigs::MessageConfig::SenderType::me:
-	case QQConfigs::MessageConfig::SenderType::she:
-	{
-		QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(QQGlobals::g_user->m_icon)));
-		icon = QQFunctions::getRoundedPixmap(icon.scaled(QQGlobals::g_theme->m_chat_message_icon_size, Qt::KeepAspectRatio), QQGlobals::g_theme->m_chat_message_icon_size.width() / 2);
-		item->setData(icon, Qt::UserRole + 1);
-
-		if (message->m_senderType == QQConfigs::MessageConfig::SenderType::she)
+		case static_cast<int>(QQConfigs::MessageConfig::MessageType::text):
 		{
-			QString nickname = QQFunctions::getUserInfo(QString::fromStdString(message->m_senderID))->m_nickname;
-			if (!nickname.isEmpty())
-			{
-				item->setData(nickname, Qt::UserRole + 2);
-			}
-			else
-			{
-				item->setData(QString::fromLocal8Bit(QQFunctions::getUserInfo(QString::fromStdString(message->m_senderID))->m_name.c_str()), Qt::UserRole + 2);
-			}
-		}
-
-		switch (message->m_messageType)
-		{
-		case QQConfigs::MessageConfig::MessageType::text:
-		{
-			QString text = QString::fromLocal8Bit(message->m_content.c_str());
+			QString text = data["content"].toString();
 			text = QQFunctions::getCalculateText(text, QQGlobals::g_theme->m_chat_message_text_font, ui->messageList->width() - 100);
 			item->setData(text, Qt::UserRole + 3);
 			break;
 		}
-		case QQConfigs::MessageConfig::MessageType::image:
+		case static_cast<int>(QQConfigs::MessageConfig::MessageType::image):
 		{
-			QPixmap image = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(message->m_content)));
+			QPixmap image = QPixmap::fromImage(QQFunctions::getBase64ToImage(data["content"].toString()));
 			image = QQFunctions::getRoundedPixmap(image.scaled(QQGlobals::g_theme->m_chat_message_image_frame_max_size, Qt::KeepAspectRatio), 10);
 			item->setData(image, Qt::UserRole + 4);
 			break;
 		}
-		case QQConfigs::MessageConfig::MessageType::file:
+		case static_cast<int>(QQConfigs::MessageConfig::MessageType::file):
 		{
-			QString fileName = QString::fromLocal8Bit(message->m_content.c_str());
+			QString fileName = data["content"].toString();
 			QPair<qreal, QString> pair = QQFunctions::getFileFormatSize(QFile(fileName).size());
 			QString fileSize = QString::number(pair.first, 'f', 2) + " " + pair.second;
 			item->setData(fileSize, Qt::UserRole + 3);
 			QPixmap fileIcon = QFileIconProvider().icon(QFileInfo(fileName)).pixmap(QQGlobals::g_theme->m_chat_message_file_icon_size);
 			item->setData(fileIcon, Qt::UserRole + 4);
+			if (data["sender"].toInt() == static_cast<int>(QQConfigs::MessageConfig::SenderType::me))
+			{
+				item->setData(100, Qt::UserRole + 7);
+			}
 			break;
 		}
-		case QQConfigs::MessageConfig::MessageType::link:
+		case static_cast<int>(QQConfigs::MessageConfig::MessageType::link):
 		{
-			QString link = QString::fromLocal8Bit(message->m_content.c_str());
+			QString link = data["content"].toString();
 			link = QQFunctions::getCalculateText(link, QQGlobals::g_theme->m_chat_message_link_font, ui->messageList->width() - 100);
 			item->setData(link, Qt::UserRole + 3);
 			break;
 		}
-		case QQConfigs::MessageConfig::MessageType::emoji:
+		case static_cast<int>(QQConfigs::MessageConfig::MessageType::emoji):
 		{
-			item->setData(QString::fromStdString(message->m_content.c_str()), Qt::UserRole + 3);
 			break;
 		}
 		default:
@@ -512,16 +429,16 @@ void QQChat::loadMessageInModelItem(QStandardItem *item, const QSharedPointer<QQ
 		}
 		break;
 	}
-	case QQConfigs::MessageConfig::SenderType::system:
+	case static_cast<int>(QQConfigs::MessageConfig::SenderType::system):
 	{
-		QString system = QString::fromLocal8Bit(message->m_content.c_str());
+		QString system = data["content"].toString();
 		system = QQFunctions::getCalculateText(system, QQGlobals::g_theme->m_chat_message_system_font, ui->messageList->width() - 100, true);
 		item->setData(system, Qt::UserRole + 3);
 		break;
 	}
-	case QQConfigs::MessageConfig::SenderType::time:
+	case static_cast<int>(QQConfigs::MessageConfig::SenderType::time):
 	{
-		QString time = QString::fromStdString(message->m_content.c_str());
+		QString time = data["content"].toString();
 		qint64 daysDiff = QDateTime::fromString(time).secsTo(QDateTime::currentDateTime()) / (24 * 3600);
 		if (daysDiff < 1)
 		{
@@ -571,137 +488,232 @@ void QQChat::loadMessageInModelItem(QStandardItem *item, const QSharedPointer<QQ
 	default:
 		break;
 	}
-	// 设置标志位
-	switch (message->m_senderType)
-	{
-	case QQConfigs::MessageConfig::SenderType::me:
-	{
-		item->setData(false, Qt::UserRole + 5);
-		if (message->m_messageType == QQConfigs::MessageConfig::MessageType::file)
-		{
-			item->setData(100, Qt::UserRole + 6);
-		}
-		break;
-	}
-	case QQConfigs::MessageConfig::SenderType::system:
-	case QQConfigs::MessageConfig::SenderType::time:
-	{
-		item->setData(true, Qt::UserRole + 5);
-		break;
-	}
-	}
+	item->setData(data["sending"].toBool(), Qt::UserRole + 5);
+	item->setData(data["sended"].toBool(), Qt::UserRole + 6);
 }
 
 void QQChat::sendFileByName(const QString &fileName)
 {
 	// 更新界面
 	QModelIndex index = ui->indexList->currentIndex();
-	QQConfigs::FriendConfig *user = const_cast<QQConfigs::FriendConfig *>(qvariant_cast<QQConfigs::FriendConfig *>(index.data(Qt::UserRole)));
-	QQConfigs::GroupConfig *group = const_cast<QQConfigs::GroupConfig *>(qvariant_cast<QQConfigs::GroupConfig *>(index.data(Qt::UserRole)));
-	QSharedPointer<QQConfigs::MessageConfig> message(new QQConfigs::MessageConfig);
-	message->m_messageType = QQConfigs::MessageConfig::MessageType::file;
-	message->m_senderType = QQConfigs::MessageConfig::SenderType::me;
-	if (user != nullptr)
-	{
-		message->m_receiverID = user->m_ID;
-	}
-	else if (group != nullptr)
-	{
-		message->m_receiverID = group->m_ID;
-	}
-	message->m_content = fileName.toStdString();
-	message->m_time = QDateTime::currentDateTime().toSecsSinceEpoch();
-	message->m_isDownLoaded.emplace(true);
-	appendMessage(message);
+	QStandardItem *item = new QStandardItem;
+	QVariantMap map;
+	QVariantList list;
+	QString receiver = index.data(Qt::UserRole).toString();
+	QDateTime time = QDateTime::currentDateTime();
+	list << QString::fromStdString(QQGlobals::g_user->m_ID)
+		 << receiver
+		 << time.toSecsSinceEpoch();
+	map.insert("ID", QQFunctions::getUniqueHashID(list));
+	map.insert("sender", static_cast<int>(QQConfigs::MessageConfig::SenderType::me));
+	map.insert("type", static_cast<int>(QQConfigs::MessageConfig::MessageType::file));
+	map.insert("content", fileName);
+	map.insert("sending", true);
+	map.insert("sended", false);
+	loadMessageInModelItem(item, map);
+	m_messageListModel->appendRow(item);
 
 	// 请求单独的文件模块进行处理与发送
 	QJsonObject sendData;
 	sendData.insert("version", "1.0");
 	sendData.insert("sender", "chat");
-	sendData.insert("action", "requestfile");
+	sendData.insert("reciver", "file");
+	sendData.insert("action", "sendfile");
 	QJsonObject data;
 	data.insert("senderID", QString::fromStdString(QQGlobals::g_user->m_ID));
-	data.insert("receiverID", QString::fromStdString(message->m_receiverID));
+	data.insert("receiverID", receiver);
 	data.insert("fileName", fileName);
 	sendData.insert("data", data);
-	QQ_SEND_EVENT(QQEnums::sendfile, QJsonDocument(sendData).toJson());
+	QQ_SEND_EVENT_GLOBAL(QQEnums::requestmoudel, QJsonDocument(sendData).toJson());
 }
 
-void QQChat::appendMessage(const QSharedPointer<QQConfigs::MessageConfig> &message, int index)
+void QQChat::handleNetwork(const QByteArray &data)
 {
-	QStandardItem *item = new QStandardItem;
-	QListView *listView = ui->messageList;
-	loadMessageInModelItem(item, message);
-	if (index == -1)
+	QJsonObject receiveData = QJsonDocument::fromJson(data).object();
+	if (receiveData["action"].toString() == QString("receivemessage"))
 	{
-		m_messageListModel->insertRow(m_messageListModel->rowCount() - 1, item);
-		listView->scrollToBottom();
-		QModelIndex currentIndex = ui->indexList->currentIndex();
-		QQConfigs::FriendConfig *user = const_cast<QQConfigs::FriendConfig *>(qvariant_cast<QQConfigs::FriendConfig *>(currentIndex.data(Qt::UserRole)));
-		QQConfigs::GroupConfig *group = const_cast<QQConfigs::GroupConfig *>(qvariant_cast<QQConfigs::GroupConfig *>(currentIndex.data(Qt::UserRole)));
-		if (user != nullptr)
-		{
-			user->m_msgList.append(message);
-		}
-		else if (group != nullptr)
-		{
-			group->m_msgList.append(message);
-		}
-		if (message->m_senderType == QQConfigs::MessageConfig::SenderType::me)
-		{
-			sendMessageToNetWork(message);
-		}
+		QJsonObject realData = receiveData["data"].toObject();
+		QStandardItem *item = new QStandardItem;
+		QVariantMap map;
+		map.insert("ID", realData["ID"].toString());
+		map.insert("sender", realData["sender"].toInt());
+		map.insert("type", realData["type"].toInt());
+		map.insert("content", realData["content"].toString());
+		map.insert("time", realData["time"].toString());
+		map.insert("sending", false);
+		map.insert("sended", true);
+		loadMessageInModelItem(item, map);
+		m_messageListModel->appendRow(item);
+		QJsonObject sendData;
+		sendData.insert("version", *(QQGlobals::g_version));
+		sendData.insert("sender", "chat");
+		sendData.insert("receiver", "storage");
+		sendData.insert("action", "savemessage");
+		sendData.insert("data", realData);
+		QQ_SEND_EVENT_GLOBAL(QQEnums::savestorage, QJsonDocument(sendData).toJson());
 	}
-	else
+	else if (receiveData["action"].toString() == QString("updatemessage"))
 	{
-		m_messageListModel->setItem(index, item);
+		QJsonObject realData = receiveData["data"].toObject();
+		// 检查界面是否需要更新
+		QString sender = realData["sender"].toString();
+		QString receiver = realData["receiver"].toString();
+		QString time = realData["time"].toString();
+		QString currentChatID = ui->indexList->currentIndex().data(Qt::UserRole).toString();
+		if (sender == currentChatID)
+		{
+			// todo-向本地存储查询消息的位置
+			int index = 0;
+			QStandardItem *item = m_messageListModel->item(index);
+			item->setData(realData["sending"].toBool(), Qt::UserRole + 5);
+			item->setData(realData["sended"].toBool(), Qt::UserRole + 6);
+			if (realData["delete"].toBool())
+			{
+				m_messageListModel->removeRow(index);
+				QStandardItem *item = new QStandardItem;
+				QVariantMap map;
+				QVariantList list;
+				list << sender << receiver << time;
+				map.insert("ID", QQFunctions::getUniqueHashID(list));
+				map.insert("sender", static_cast<int>(QQConfigs::MessageConfig::SenderType::system));
+				map.insert("type", static_cast<int>(QQConfigs::MessageConfig::MessageType::text));
+				map.insert("content", "对方撤回了一条消息");
+				map.insert("time", time);
+				map.insert("sending", false);
+				map.insert("sended", true);
+				loadMessageInModelItem(item, map);
+				m_messageListModel->appendRow(item);
+
+				// todo-向本地存储更新消息
+			}
+		}
+
+		QJsonObject sendData;
+		sendData.insert("version", *(QQGlobals::g_version));
+		sendData.insert("sender", "chat");
+		sendData.insert("receiver", "storage");
+		sendData.insert("action", "updatemessage");
+		sendData.insert("data", realData);
+		QQ_SEND_EVENT_GLOBAL(QQEnums::savestorage, QJsonDocument(sendData).toJson());
 	}
 }
 
-void QQChat::loadMessages(QQConfigs::FriendConfig *user)
+void QQChat::handleStorage(const QByteArray &data)
 {
-	// 预分配空间
-	m_messageListModel->insertRows(0, user->m_msgList.count());
-	for (int i = 0; i < user->m_msgList.count(); ++i)
+	QJsonObject receiveData = QJsonDocument::fromJson(data).object();
+	if (receiveData["action"].toString() == QString("loadindex"))
 	{
-		appendMessage(user->m_msgList.at(i), i);
-	}
-	if (user->m_msgList.count() <= MAX_SLIDE_SIZE)
-	{
-		for (int i = 0; i < user->m_msgList.count(); ++i)
+		QJsonObject realData = receiveData["data"].toObject();
+		QJsonArray indexList = realData["indexs"].toArray();
+		m_indexListModel->insertRows(0, indexList.size());
+		for (int i = 0; i < indexList.size(); ++i)
 		{
-			m_slide.append(m_messageListModel->item(i));
+			QJsonObject index = indexList.at(i).toObject();
+			QStandardItem *item = new QStandardItem;
+			if (index["type"].toString() == QString("user"))
+			{
+				QVariantMap map;
+				map.insert("ID", index["ID"].toString());
+				map.insert("name", index["name"].toString());
+				map.insert("nickname", index["nickname"].toString());
+				map.insert("icon", index["icon"].toString());
+				map.insert("message", index["message"].toString());
+				map.insert("time", index["time"].toString());
+				map.insert("count", index["count"].toInt());
+				loadPeopleInModelItem(item, map);
+			}
+			else if (index["type"].toString() == QString("group"))
+			{
+				QVariantMap map;
+				map.insert("ID", index["ID"].toString());
+				map.insert("name", index["name"].toString());
+				map.insert("nickname", index["nickname"].toString());
+				map.insert("icon", index["icon"].toString());
+				map.insert("message", index["message"].toString());
+				map.insert("time", index["time"].toString());
+				map.insert("count", index["count"].toInt());
+				loadPeopleInModelItem(item, map);
+			}
+			m_indexListModel->setItem(i, item);
 		}
 	}
-	else
+	else if (receiveData["action"].toString() == QString("loadsmessage"))
 	{
-		for (int i = user->m_msgList.count() - MAX_SLIDE_SIZE; i < user->m_msgList.count(); ++i)
+		QJsonObject realData = receiveData["data"].toObject();
+		QJsonArray messageList = realData["messages"].toArray();
+		m_messageListModel->insertRows(0, messageList.size());
+		for (int i = 0; i < messageList.size(); ++i)
 		{
-			m_slide.append(m_messageListModel->item(i));
+			QJsonObject message = messageList.at(i).toObject();
+			QStandardItem *item = new QStandardItem;
+			QVariantMap map;
+			map.insert("ID", message["ID"].toString());
+			map.insert("sender", message["sender"].toInt());
+			map.insert("type", message["type"].toInt());
+			map.insert("content", message["content"].toString());
+			map.insert("sending", message["sending"].toBool());
+			map.insert("sended", message["sended"].toBool());
+			loadMessageInModelItem(item, map);
+			m_messageListModel->setItem(i, item);
 		}
 	}
 }
 
-void QQChat::loadMessages(QQConfigs::GroupConfig *group)
+void QQChat::handleEmoji(const QByteArray &data)
 {
-	// 预分配空间
-	m_messageListModel->insertRows(0, group->m_msgList.count());
-	for (int i = 0; i < group->m_msgList.count(); ++i)
+	QJsonObject receiveData = QJsonDocument::fromJson(data).object();
+	if (receiveData["action"].toString() == QString("sendemoji"))
 	{
-		appendMessage(group->m_msgList.at(i), i);
+		QStandardItem *item = new QStandardItem;
+		QVariantMap map;
+		QVariantList list;
+		QString receiver = ui->indexList->currentIndex().data(Qt::UserRole).toString();
+		QDateTime time = QDateTime::currentDateTime();
+		list << QString::fromStdString(QQGlobals::g_user->m_ID)
+			 << receiver
+			 << time.toSecsSinceEpoch();
+		map.insert("ID", QQFunctions::getUniqueHashID(list));
+		map.insert("sender", static_cast<int>(QQConfigs::MessageConfig::SenderType::me));
+		map.insert("type", static_cast<int>(QQConfigs::MessageConfig::MessageType::emoji));
+		map.insert("content", receiveData["data"].toObject()["content"].toString());
+		map.insert("sending", true);
+		map.insert("sended", false);
+		loadMessageInModelItem(item, map);
+		m_messageListModel->appendRow(item);
+		map.insert("sender", QString::fromStdString(QQGlobals::g_user->m_ID));
+		map.insert("receiver", receiver);
+		map.insert("time", time.toSecsSinceEpoch());
+		sendMessageToNetWork(map);
 	}
-	if (group->m_msgList.count() <= MAX_SLIDE_SIZE)
+}
+
+void QQChat::handleFriend(const QByteArray &data)
+{
+	QJsonObject receiveData = QJsonDocument::fromJson(data).object();
+	if (receiveData["action"].toString() == QString("addfriend"))
 	{
-		for (int i = 0; i < group->m_msgList.count(); ++i)
-		{
-			m_slide.append(m_messageListModel->item(i));
-		}
+		QStandardItem *item = new QStandardItem;
+		QVariantMap map;
+		map.insert("ID", receiveData["data"].toObject()["ID"].toString());
+		map.insert("name", receiveData["data"].toObject()["name"].toString());
+		map.insert("nickname", receiveData["data"].toObject()["nickname"].toString());
+		map.insert("icon", receiveData["data"].toObject()["icon"].toString());
+		map.insert("message", receiveData["data"].toObject()["message"].toString());
+		map.insert("time", receiveData["data"].toObject()["time"].toString());
+		map.insert("count", receiveData["data"].toObject()["count"].toInt());
+		loadPeopleInModelItem(item, map);
+		m_indexListModel->insertRow(0, item);
 	}
-	else
+	else if (receiveData["action"].toString() == QString("deletefriend"))
 	{
-		for (int i = group->m_msgList.count() - MAX_SLIDE_SIZE; i < group->m_msgList.count(); ++i)
+		QString ID = receiveData["data"].toObject()["ID"].toString();
+		for (int i = 0; i < m_indexListModel->rowCount(); ++i)
 		{
-			m_slide.append(m_messageListModel->item(i));
+			if (m_indexListModel->item(i)->data(Qt::UserRole).toString() == ID)
+			{
+				m_indexListModel->removeRow(i);
+				break;
+			}
 		}
 	}
 }
@@ -733,37 +745,18 @@ void QQChat::do_userContextMenuAction(QAction *action)
 	else if (action == m_chatFriendContextMenu->actions()[1])
 	{
 		QString text = action->text();
-		QQConfigs::FriendConfig *user = const_cast<QQConfigs::FriendConfig *>(qvariant_cast<QQConfigs::FriendConfig *>(index.data(Qt::UserRole)));
-		QQConfigs::GroupConfig *group = const_cast<QQConfigs::GroupConfig *>(qvariant_cast<QQConfigs::GroupConfig *>(index.data(Qt::UserRole)));
-
 		if (text == QString::fromLocal8Bit("消息免打扰"))
 		{
 			action->setText(QString::fromLocal8Bit("取消免打扰"));
-			if (user != nullptr)
-			{
-				user->m_state = QQConfigs::FriendConfig::UserStateType::distrup;
-			}
-			else if (group != nullptr)
-			{
-				group->m_state = QQConfigs::GroupConfig::GroupStateType::disnotice;
-			}
 		}
 		else if (text == QString::fromLocal8Bit("取消免打扰"))
 		{
 			action->setText(QString::fromLocal8Bit("消息免打扰"));
-			if (user != nullptr)
-			{
-				user->m_state = QQConfigs::FriendConfig::UserStateType::online;
-			}
-			else if (group != nullptr)
-			{
-				group->m_state = QQConfigs::GroupConfig::GroupStateType::normal;
-			}
 		}
 	}
 	else if (action == m_chatFriendContextMenu->actions()[2])
 	{
-		m_haveInChatList.remove(qvariant_cast<QQConfigs::FriendConfig *>(index.data(Qt::UserRole))->m_ID);
+		m_haveInChatList.remove(index.data(Qt::UserRole).toString());
 		// 清除默认的移除选中项,选中项效果下移
 		if (ui->indexList->selectionModel()->isSelected(index))
 		{
@@ -805,29 +798,19 @@ void QQChat::do_userContextMenuAction(QAction *action)
 		{
 			// 获取举报信息
 			QModelIndex index = ui->indexList->currentIndex();
-			QQConfigs::FriendConfig *user = const_cast<QQConfigs::FriendConfig *>(qvariant_cast<QQConfigs::FriendConfig *>(index.data(Qt::UserRole)));
-			QQConfigs::GroupConfig *group = const_cast<QQConfigs::GroupConfig *>(qvariant_cast<QQConfigs::GroupConfig *>(index.data(Qt::UserRole)));
 			QString report = QQWidgets::MessageDialog::getInstance()->findChild<QTextEdit *>()->toPlainText();
 			// 发送举报消息
-			QJsonObject reportData;
-			reportData.insert("version", "1.0");
-			reportData.insert("sender", "chat");
-			reportData.insert("action", "sendreport");
+			QJsonObject sendData;
+			sendData.insert("version", "1.0");
+			sendData.insert("sender", "chat");
+			sendData.insert("receiver", "network");
+			sendData.insert("action", "sendreport");
 			QJsonObject data;
-			if (user != nullptr)
-			{
-				data.insert("type", "user");
-				data.insert("ID", QString::fromStdString(user->m_ID));
-			}
-			else if (group != nullptr)
-			{
-				data.insert("type", "group");
-				data.insert("ID", QString::fromStdString(group->m_ID));
-			}
+			data.insert("ID", index.data(Qt::UserRole).toString());
 			data.insert("report", report);
-			reportData.insert("data", data);
-			QQ_SEND_EVENT(QQEnums::sendreport, QJsonDocument(reportData).toJson());
-			// 提示发送成功
+			sendData.insert("data", data);
+			QQ_SEND_EVENT_GLOBAL(QQEnums::sendmessage, QJsonDocument(sendData).toJson());
+			//  提示发送成功
 			ElaMessageBar::success(ElaMessageBarType::PositionPolicy::TopRight, "", QString::fromLocal8Bit("发送举报消息成功，感谢您的指正！"), 2000, this);
 		};
 		messageDialog->setFunction(function);
@@ -846,46 +829,34 @@ void QQChat::do_userClickChatIndex(const QModelIndex &index)
 		}
 	}
 	ui->chatStackWidget->setCurrentIndex(1);
-	QQConfigs::FriendConfig *user = const_cast<QQConfigs::FriendConfig *>(qvariant_cast<QQConfigs::FriendConfig *>(index.data(Qt::UserRole)));
-	QQConfigs::GroupConfig *group = const_cast<QQConfigs::GroupConfig *>(qvariant_cast<QQConfigs::GroupConfig *>(index.data(Qt::UserRole)));
-	// 更新聊天界面的信息与模型的信息
-	if (user != nullptr)
-	{
-		user->m_newMsgCount = 0;
-		m_indexListModel->itemFromIndex(index)->setData(0, Qt::UserRole + 6);
-		ui->nicknameLab->setText(user->m_nickname);
-	}
-	else if (group != nullptr)
-	{
-		group->m_newMsgCount = 0;
-		m_indexListModel->itemFromIndex(index)->setData(0, Qt::UserRole + 6);
-		ui->nicknameLab->setText(group->m_nickname);
-	}
-	m_messageListModel->clear();
-	if (user != nullptr)
-	{
-		loadMessages(user);
-	}
-	else if (group != nullptr)
-	{
-		loadMessages(group);
-	}
+	m_indexListModel->itemFromIndex(index)->setData(0, Qt::UserRole + 5);
+	QString name = m_indexListModel->itemFromIndex(index)->data(Qt::UserRole + 2).toString();
+	ui->nicknameLab->setText(name);
 	// 尾部空白--主要是美观
 	QStandardItem *item = new QStandardItem;
 	int width = ui->messageList->width();
 	item->setSizeHint(QSize(width, 25));
 	m_messageListModel->appendRow(item);
-	m_haveInChatList.insert(user->m_ID, m_indexListModel->itemFromIndex(index));
-	QTimer::singleShot(50, [this]
-					   { ui->messageList->scrollToBottom(); });
+	m_haveInChatList.insert(m_indexListModel->itemFromIndex(index)->data(Qt::UserRole).toString(), m_indexListModel->itemFromIndex(index));
 	m_activeChatIndex = index;
+
+	m_messageListModel->clear();
+	QJsonObject sendData;
+	sendData.insert("version", *(QQGlobals::g_version));
+	sendData.insert("sender", "chat");
+	sendData.insert("receiver", "storage");
+	sendData.insert("action", "loadsmessage");
+	QJsonObject data;
+	data.insert("ID", m_indexListModel->itemFromIndex(index)->data(Qt::UserRole).toString());
+	sendData.insert("data", data);
+	QQ_SEND_EVENT_GLOBAL(QQEnums::loadstorage, QJsonDocument(sendData).toJson());
 }
 
 void QQChat::do_userClickSendEmoji()
 {
 	QPoint pos = ui->emojiBtn->mapToGlobal(QPoint(0, 0));
 	pos.setY(pos.y() - QQEmoji::getInstance()->height() - 10);
-	QQEmoji::getInstance()->setGeometry(QRect(pos, QQEmoji::getInstance()->size()));
+	QQEmoji::getInstance()->move(pos);
 	QQEmoji::getInstance()->show();
 }
 
@@ -934,25 +905,26 @@ void QQChat::do_userClickSendPicture()
 		return;
 	}
 
-	QModelIndex index = ui->indexList->currentIndex();
-	QQConfigs::FriendConfig *user = const_cast<QQConfigs::FriendConfig *>(qvariant_cast<QQConfigs::FriendConfig *>(index.data(Qt::UserRole)));
-	QQConfigs::GroupConfig *group = const_cast<QQConfigs::GroupConfig *>(qvariant_cast<QQConfigs::GroupConfig *>(index.data(Qt::UserRole)));
-	QPair<QString, QString> byteArray = QQFunctions::getImageToBase64(fileName);
-	QSharedPointer<QQConfigs::MessageConfig> message(new QQConfigs::MessageConfig);
-	message->m_messageType = QQConfigs::MessageConfig::MessageType::image;
-	message->m_senderType = QQConfigs::MessageConfig::SenderType::me;
-	message->m_senderID = QQGlobals::g_user->m_ID;
-	if (user != nullptr)
-	{
-		message->m_receiverID = user->m_ID;
-	}
-	else if (group != nullptr)
-	{
-		message->m_receiverID = group->m_ID;
-	}
-	message->m_time = QDateTime::currentDateTime().toSecsSinceEpoch();
-	message->m_content = byteArray.first.toStdString();
-	appendMessage(message);
+	QStandardItem *item = new QStandardItem;
+	QVariantMap map;
+	QVariantList list;
+	QString receiver = ui->indexList->currentIndex().data(Qt::UserRole).toString();
+	QDateTime time = QDateTime::currentDateTime();
+	list << QString::fromStdString(QQGlobals::g_user->m_ID)
+		 << receiver
+		 << time.toSecsSinceEpoch();
+	map.insert("ID", QQFunctions::getUniqueHashID(list));
+	map.insert("sender", static_cast<int>(QQConfigs::MessageConfig::SenderType::me));
+	map.insert("type", static_cast<int>(QQConfigs::MessageConfig::MessageType::image));
+	map.insert("content", QQFunctions::getImageToBase64(fileName).first);
+	map.insert("sending", true);
+	map.insert("sended", false);
+	loadMessageInModelItem(item, map);
+	m_messageListModel->appendRow(item);
+	map.insert("sender", QString::fromStdString(QQGlobals::g_user->m_ID));
+	map.insert("receiver", receiver);
+	map.insert("time", time.toSecsSinceEpoch());
+	sendMessageToNetWork(map);
 }
 
 void QQChat::do_userOpenBigWrite(bool isChecked)
@@ -1034,24 +1006,18 @@ void QQChat::do_userClickSendAudio()
 	pos += QPoint(this->width() / 2 - audio->width() / 2, this->height() / 2 - audio->height() / 2);
 	audio->move(pos);
 	audio->show();
+
 	QJsonObject sendData;
-	sendData.insert("version", "1.0");
+	sendData.insert("version", *(QQGlobals::g_version));
 	sendData.insert("sender", "chat");
-	sendData.insert("action", "requestaudio");
+	sendData.insert("reciver", "audio");
+	sendData.insert("action", "sendaudio");
+	QJsonObject data;
+	data.insert("senderID", QString::fromStdString(QQGlobals::g_user->m_ID));
 	QModelIndex index = ui->indexList->currentIndex();
-	QQConfigs::FriendConfig *user = const_cast<QQConfigs::FriendConfig *>(qvariant_cast<QQConfigs::FriendConfig *>(index.data(Qt::UserRole)));
-	QQConfigs::GroupConfig *group = const_cast<QQConfigs::GroupConfig *>(qvariant_cast<QQConfigs::GroupConfig *>(index.data(Qt::UserRole)));
-	if (user != nullptr)
-	{
-		sendData.insert("senderID", QString::fromStdString(QQGlobals::g_user->m_ID));
-		sendData.insert("receiverID", QString::fromStdString(user->m_ID));
-	}
-	else if (group != nullptr)
-	{
-		sendData.insert("senderID", QString::fromStdString(QQGlobals::g_user->m_ID));
-		sendData.insert("receiverID", QString::fromStdString(group->m_ID));
-	}
-	QQ_SEND_EVENT(QQEnums::requestaudio, QJsonDocument(sendData).toJson());
+	data.insert("receiverID", index.data(Qt::UserRole).toString());
+	sendData.insert("data", data);
+	QQ_SEND_EVENT_GLOBAL(QQEnums::requestmoudel, QJsonDocument(sendData).toJson());
 }
 
 void QQChat::do_userClickClearInput()
@@ -1069,22 +1035,25 @@ void QQChat::do_userClickSendMessage()
 		return;
 	}
 	QModelIndex index = ui->indexList->currentIndex();
-	QQConfigs::FriendConfig *user = const_cast<QQConfigs::FriendConfig *>(qvariant_cast<QQConfigs::FriendConfig *>(index.data(Qt::UserRole)));
-	QQConfigs::GroupConfig *group = const_cast<QQConfigs::GroupConfig *>(qvariant_cast<QQConfigs::GroupConfig *>(index.data(Qt::UserRole)));
-	QSharedPointer<QQConfigs::MessageConfig> message(new QQConfigs::MessageConfig);
-	message->m_messageType = QQConfigs::MessageConfig::MessageType::text;
-	message->m_senderType = QQConfigs::MessageConfig::SenderType::me;
-	message->m_senderID = QQGlobals::g_user->m_ID;
-	if (user != nullptr)
-	{
-		message->m_receiverID = user->m_ID;
-	}
-	else if (group != nullptr)
-	{
-		message->m_receiverID = group->m_ID;
-	}
-	message->m_content = ui->textInput->toPlainText().toLocal8Bit();
-	message->m_time = QDateTime::currentDateTime().toSecsSinceEpoch();
-	appendMessage(message);
+	QStandardItem *item = new QStandardItem;
+	QVariantMap map;
+	QVariantList list;
+	QString receiver = index.data(Qt::UserRole).toString();
+	QDateTime time = QDateTime::currentDateTime();
+	list << QString::fromStdString(QQGlobals::g_user->m_ID)
+		 << receiver
+		 << time.toSecsSinceEpoch();
+	map.insert("ID", index.data(Qt::UserRole).toString());
+	map.insert("sender", static_cast<int>(QQConfigs::MessageConfig::SenderType::me));
+	map.insert("type", static_cast<int>(QQConfigs::MessageConfig::MessageType::text));
+	map.insert("content", ui->textInput->toPlainText());
+	map.insert("sending", true);
+	map.insert("sended", false);
+	loadMessageInModelItem(item, map);
+	m_messageListModel->appendRow(item);
+	map.insert("sender", QString::fromStdString(QQGlobals::g_user->m_ID));
+	map.insert("receiver", receiver);
+	map.insert("time", time.toSecsSinceEpoch());
+	sendMessageToNetWork(map);
 	ui->textInput->clear();
 }

@@ -10,16 +10,6 @@ namespace QQFunctions
     {
     }
 
-    QQConfigs::FriendConfig *getUserInfo(const QString &ID)
-    {
-        return nullptr;
-    }
-
-    QQConfigs::GroupConfig *getGroupInfo(const QString &ID)
-    {
-        return nullptr;
-    }
-
     QPixmap getRoundedPixmap(const QPixmap &src, int radius)
     {
         if (src.isNull())
@@ -262,5 +252,18 @@ namespace QQFunctions
             }
         }
         return result;
+    }
+
+    QString getUniqueHashID(const QVariantList &data)
+    {
+        QCryptographicHash hash(QCryptographicHash::Sha256);
+        QByteArray byteArray;
+        QDataStream stream(&byteArray, QIODevice::WriteOnly);
+        for (const QVariant &value : data)
+        {
+            stream << value;
+        }
+        hash.addData(byteArray);
+        return hash.result().toHex();
     }
 }

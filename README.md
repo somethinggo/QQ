@@ -19,6 +19,9 @@
 - **CMake**:版本>=3.10 [CMake 官网](https://cmake.org/download/)
 - **ElaWidgetTools**:版本>=1.0 [官方仓库](https://github.com/Liniyous/ElaWidgetTools)
 - **qt-material-widgets**:版本无要求[官方仓库](https://github.com/laserpants/qt-material-widgets)
+- **ffmepg**:请使用二进制文件,版本保持最新[下载官网](https://www.gyan.dev/ffmpeg/builds/)
+- **vcpkg**:版本保持最新[官方仓库](https://github.com/microsoft/vcpkg)
+  - **FFTW3**:版本保持最新，通过vcpkg进行管理
 
 # 下载与安装
 
@@ -199,9 +202,9 @@ L --> M[结束]
     <tbody>
         <tr>
             <td>0</td>
-            <td>好友(群组)指针</td>
-            <td></td>
-            <td>为后续的设计准备,或者是特殊的绘制</td>
+            <td>QString</td>
+            <td>好友(群组)ID</td>
+            <td>唯一标识符号</td>
         </tr>
         <tr>
             <td>1</td>
@@ -235,12 +238,13 @@ L --> M[结束]
         </tr>
         <tr>
             <td>6</td>
-            <td>QIcon</td>
-            <td>好友(或群组)状态图标</td>
-            <td>计算圆角</td>
+            <td>int(enum)</td>
+            <td>好友(或群组)状态</td>
+            <td>标识用户的状态设置</td>
         </tr>
     </tbody>
 </table>
+
 - 消息模型内部数据划分
 
 <table>
@@ -255,49 +259,72 @@ L --> M[结束]
     <tbody>
         <tr>
             <td>0</td>
-            <td>消息体指针</td>
-            <td></td>
-            <td>为后续的设计准备,或者是特殊的绘制</td>
+            <td>QString</td>
+            <td>消息唯一标识符</td>
+            <td>使用发送者ID，接受者ID与发送时间唯一生成</td>
         </tr>
         <tr>
             <td>1</td>
+            <td>int(enum)</td>
+            <td>消息发送者类型</td>
+            <td>适应屏幕</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>int(enum)</td>
+            <td>消息类型</td>
+            <td>适应屏幕</td>
+        </tr>
+        <tr>
+            <td>3</td>
             <td>QIcon</td>
             <td>消息发送者头像</td>
             <td>计算圆角</td>
         </tr>
         <tr>
-            <td>2</td>
+            <td>4</td>
             <td>QString</td>
             <td>消息发送者名称</td>
             <td>适应屏幕,省略显示,优先显示昵称</td>
         </tr>
         <tr>
-            <td>3</td>
+            <td>5</td>
             <td>QString</td>
             <td>文本类型消息</td>
-            <td>适应屏幕,包含文本,链接,文件大小</td>
+            <td>适应屏幕,包含文本,链接,文件名</td>
         </tr>
         <tr>
-            <td>4</td>
+            <td>6</td>
             <td>QIcon</td>
             <td>图片类型消息</td>
             <td>适应屏幕,包含图片,文件图标</td>
         </tr>
         <tr>
-            <td>5</td>
+            <td>7</td>
             <td>bool</td>
             <td>是否在发送中</td>
             <td>本地用户发送的消息默认发送中,系统消息与时间消息只有发送成功状态(不会向后台发送消息,存储在本地)</td>
         </tr>
         <tr>
-            <td>6</td>
+            <td>8</td>
+            <td>bool</td>
+            <td>是否已经发送</td>
+            <td>与是否在发送中配合使用</td>
+        </tr>
+        <tr>
+            <td>9</td>
             <td>int</td>
             <td>文件下载进度,文件发送进度</td>
             <td>由于消息的唯一性,两者互不干扰</td>
         </tr>
+        <tr>
+            <td>10</td>
+            <td>自定义</td>
+            <td>额外信息</td>
+            <td></td>
+        </tr>
     </tbody>
 </table>
-
 
 ## **好友管理**
 
@@ -462,6 +489,7 @@ J --> G[关闭界面]
 {
     "version":"版本号",
     "sender":"发送者",
+    "receiver":"接受者",
     "action":"行为",
     "data":
     {

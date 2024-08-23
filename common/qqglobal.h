@@ -38,6 +38,9 @@ namespace QQGlobals
 
     // 全局单例管理
     Q_GLOBAL_STATIC(QList<QObject *>, g_singletonManager)
+
+    // 全局协议版本号
+    Q_GLOBAL_STATIC(QString, g_version)
 }
 
 #endif // QQ_COMMON_GLOBAL_H
