@@ -200,7 +200,7 @@ void QQEmoji::initEmojiView()
 	sendData.insert("version", *(QQGlobals::g_version));
 	sendData.insert("sender", "emoji");
 	sendData.insert("receiver", "storage");
-	sendData.insert("action", "load");
+	sendData.insert("action", "loademoji");
 	sendData.insert("data", QJsonObject());
 	QQ_SEND_EVENT_GLOBAL(QQEnums::loadstorage, QJsonDocument(sendData).toJson());
 
@@ -211,7 +211,7 @@ void QQEmoji::initEmojiView()
 	}
 }
 
-void QQEmoji::loadEmojiData(const QByteArray &data)
+void QQEmoji::handleStorage(const QByteArray &data)
 {
 }
 
@@ -219,6 +219,7 @@ bool QQEmoji::event(QEvent *event)
 {
 	switch (event->type())
 	{
+		QQ_HANDLE_EVENT_THIS(QQEnums::loadstorage, QQEmoji::handleStorage);
 	default:
 		break;
 	}
@@ -267,15 +268,16 @@ void QQEmoji::do_emojiAppendBtnClicked()
 			insertData(1, item);
 			tableView->setIndexWidget(m_models[1].first->indexFromItem(item), emojiLab);
 
-			QJsonObject emojiData;
-			emojiData.insert("version", "1.0");
-			emojiData.insert("sender", "emoji");
-			emojiData.insert("action", "append");
+			QJsonObject sendData;
+			sendData.insert("version", *(QQGlobals::g_version));
+			sendData.insert("sender", "emoji");
+			sendData.insert("receiver", "storage");
+			sendData.insert("action", "addemoji");
 			QJsonObject data;
 			data.insert("type", format);
 			data.insert("content", QString(file.readAll()));
-			emojiData.insert("data", data);
-			QQ_SEND_EVENT(QQEnums::addemoji, QByteArray(QJsonDocument(emojiData).toJson()));
+			sendData.insert("data", data);
+			QQ_SEND_EVENT_GLOBAL(QQEnums::savestorage, QJsonDocument(sendData).toJson());
 		}
 	}
 }
@@ -283,13 +285,14 @@ void QQEmoji::do_emojiAppendBtnClicked()
 void QQEmoji::do_emojiEmojiItemClicked(const QModelIndex &index)
 {
 	this->accept();
-	QJsonObject emojiData;
-	emojiData.insert("version", "1.0");
-	emojiData.insert("sender", "emoji");
-	emojiData.insert("action", "send");
+	QJsonObject sendData;
+	sendData.insert("version", "1.0");
+	sendData.insert("sender", "emoji");
+	sendData.insert("receiver", "chat");
+	sendData.insert("action", "sendemoji");
 	QJsonObject data;
 	data.insert("type", index.data(Qt::UserRole).toString());
 	data.insert("content", index.data(Qt::UserRole + 1).toString());
-	emojiData.insert("data", data);
-	QQ_SEND_EVENT(QQEnums::sendemoji, QByteArray(QJsonDocument(emojiData).toJson()));
+	sendData.insert("data", data);
+	QQ_SEND_EVENT_GLOBAL(QQEnums::requestmoudel, QJsonDocument(sendData).toJson());
 }

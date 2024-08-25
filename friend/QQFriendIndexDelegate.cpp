@@ -32,13 +32,6 @@ void QQFriendIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
     }
     else
     {
-        QQConfigs::FriendConfig *user = qvariant_cast<QQConfigs::FriendConfig *>(index.data(Qt::UserRole));
-        QQConfigs::GroupConfig *group = qvariant_cast<QQConfigs::GroupConfig *>(index.data(Qt::UserRole));
-
-        if (user == nullptr && group == nullptr)
-        {
-            return;
-        }
         if (option.state & QStyle::State_MouseOver)
         {
             painter->fillRect(option.rect, QQGlobals::g_theme->m_friend_index_hover_color);
@@ -49,16 +42,16 @@ void QQFriendIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
         }
 
         painter->save();
-        QPixmap icon = index.data(Qt::UserRole + 1).value<QPixmap>();
+        QPixmap icon = index.data(Qt::UserRole + 2).value<QPixmap>();
         QRect iconRect = QRect(QPoint(option.rect.height() / 2 - QQGlobals::g_theme->m_friend_index_icon_size.width() / 2, option.rect.y() + option.rect.height() / 2 - QQGlobals::g_theme->m_friend_index_icon_size.width() / 2),
                                QQGlobals::g_theme->m_friend_index_icon_size);
         painter->drawPixmap(iconRect, icon);
         painter->restore();
 
-        if (user != nullptr)
+        if (index.data(Qt::UserRole + 1).toInt() == 0)
         {
             painter->save();
-            QString name = index.data(Qt::UserRole + 2).toString();
+            QString name = index.data(Qt::UserRole + 3).toString();
             if (option.state & QStyle::State_Selected)
             {
                 painter->setPen(QQGlobals::g_theme->m_friend_index_name_selected_color);
@@ -69,23 +62,23 @@ void QQFriendIndexDelegate::paint(QPainter *painter, const QStyleOptionViewItem 
             painter->drawText(nameRect, Qt::AlignCenter, name);
 
             painter->setFont(QQGlobals::g_theme->m_friend_index_sign_font);
-            QString message = index.data(Qt::UserRole + 3).toString();
-            QRect messageRect = QQFunctions::getCalculateTextRect(message, painter->font());
-            messageRect.moveTopLeft(QPoint(nameRect.left(), nameRect.bottom()));
-            painter->drawText(messageRect, Qt::AlignCenter, message);
+            QString sign = index.data(Qt::UserRole + 4).toString();
+            QRect signRect = QQFunctions::getCalculateTextRect(sign, painter->font());
+            signRect.moveTopLeft(QPoint(nameRect.left(), nameRect.bottom()));
+            painter->drawText(signRect, Qt::AlignCenter, sign);
             painter->restore();
         }
-        else if (group != nullptr)
+        else if (index.data(Qt::UserRole + 1).toInt() == 1)
         {
             painter->save();
-            QString name = index.data(Qt::UserRole + 2).toString();
+            QString name = index.data(Qt::UserRole + 3).toString();
             if (option.state & QStyle::State_Selected)
             {
                 painter->setPen(QQGlobals::g_theme->m_friend_index_name_selected_color);
             }
             painter->setFont(QQGlobals::g_theme->m_friend_index_name_font);
             QRect nameRect = QQFunctions::getCalculateTextRect(name, painter->font());
-            nameRect.moveTopLeft(QPoint(iconRect.right() + m_commonSpace, option.rect.height() / 2 - nameRect.height() / 2));
+            nameRect.moveTopLeft(QPoint(iconRect.right() + m_commonSpace, iconRect.top()));
             painter->drawText(nameRect, Qt::AlignCenter, name);
             painter->restore();
         }

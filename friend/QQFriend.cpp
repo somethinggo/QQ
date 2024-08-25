@@ -24,9 +24,7 @@ void QQFriendProxyStyle::drawControl(ControlElement element, const QStyleOption 
 	{
 		QStyleOptionButton *buttonOption = const_cast<QStyleOptionButton *>(qstyleoption_cast<const QStyleOptionButton *>(option));
 		// 边框
-		if (name == "main_chatTab_chatStack_NotNULL_inputGroup_clearBtn" ||
-			name == "main_chatTab_chatStack_NotNULL_inputGroup_sendBtn" ||
-			name == "friendShareOtherBtn" ||
+		if (name == "friendShareOtherBtn" ||
 			name == "friendAudioBtn" ||
 			name == "friendSendMsgBtn")
 		{
@@ -39,9 +37,7 @@ void QQFriendProxyStyle::drawControl(ControlElement element, const QStyleOption 
 			painter->restore();
 		}
 		// 鼠标移入加深颜色，鼠标按下的颜色加深
-		if (name == "main_chatTab_chatStack_NotNULL_inputGroup_clearBtn" ||
-			name == "main_chatTab_chatStack_NotNULL_inputGroup_sendBtn" ||
-			name == "friendShareOtherBtn" ||
+		if (name == "friendShareOtherBtn" ||
 			name == "friendAudioBtn" ||
 			name == "friendSendMsgBtn" ||
 			name == "friendNoticeBtn" ||
@@ -70,14 +66,7 @@ void QQFriendProxyStyle::drawControl(ControlElement element, const QStyleOption 
 			}
 		}
 		// 鼠标移入与按下改变图片
-		if (name == "main_chatTab_chatStack_NotNULL_inputToolGroup_emojiBtn" ||
-			name == "main_chatTab_chatStack_NotNULL_inputToolGroup_fileBtn" ||
-			name == "main_chatTab_chatStack_NotNULL_inputToolGroup_pictureBtn" ||
-			name == "main_chatTab_chatStack_NotNULL_inputToolGroup_upperBtn" ||
-			name == "main_chatTab_chatStack_NotNULL_inputToolGroup_fontBtn" ||
-			name == "main_chatTab_chatStack_NotNULL_inputToolGroup_historyBtn" ||
-			name == "main_chatTab_chatStack_NotNULL_inputGroup_audioBtn" ||
-			name == "filterNoticeBtn" ||
+		if (name == "filterNoticeBtn" ||
 			name == "clearNoticeBtn")
 		{
 			if (buttonOption && (buttonOption->state & State_MouseOver))
@@ -96,21 +85,6 @@ void QQFriendProxyStyle::drawControl(ControlElement element, const QStyleOption 
 				{
 					buttonOption->icon = buttonOption->icon.pixmap(buttonOption->iconSize, QIcon::Active, QIcon::On);
 				}
-			}
-		}
-		// 选中的背景板
-		if (name == "main_chatTab_chatStack_NotNULL_inputToolGroup_upperBtn")
-		{
-			if (buttonOption && (buttonOption->state & State_On))
-			{
-				buttonOption->state &= ~State_On;
-				buttonOption->icon = buttonOption->icon.pixmap(buttonOption->iconSize, QIcon::Active, QIcon::On);
-				painter->save();
-				painter->setRenderHint(QPainter::Antialiasing);
-				painter->setPen(Qt::NoPen);
-				painter->setBrush(QColor("#CCE4F7"));
-				painter->drawEllipse(option->rect);
-				painter->restore();
 			}
 		}
 	}
@@ -227,7 +201,7 @@ QQFriend::QQFriend(QWidget *parent)
 	ui->clearNoticeBtn->setStyle(m_proxyStyle);
 	ui->noticeNULLIconLab->setPixmap(ElaIcon::getInstance()->getElaIcon(ElaIconType::Bell, 100, 100, 100).pixmap(100, 100));
 
-	qApp->installEventFilter(this);
+	this->installEventFilter(this);
 	connect(ui->searchMoreBtn, &ElaIconButton::clicked, this, &QQFriend::do_userClickSearchMore);
 	connect(ui->friendNoticeBtn, &QPushButton::clicked, this, &QQFriend::do_userClickNotice);
 	connect(ui->groupNoticeBtn, &QPushButton::clicked, this, &QQFriend::do_userClickNotice);
@@ -241,6 +215,14 @@ QQFriend::QQFriend(QWidget *parent)
 	connect(ui->friendSendMsgBtn, &QPushButton::clicked, this, &QQFriend::do_userClickSendMessage);
 	connect(ui->groupShareOtherBtn, &QPushButton::clicked, this, &QQFriend::do_userClickShareOther);
 	connect(ui->groupSendMsgBtn, &QPushButton::clicked, this, &QQFriend::do_userClickSendMessage);
+
+	QJsonObject sendData;
+	sendData.insert("version", *(QQGlobals::g_version));
+	sendData.insert("sender", "friend");
+	sendData.insert("receiver", "storage");
+	sendData.insert("action", "loadindex");
+	sendData.insert("data", QJsonObject());
+	QQ_SEND_EVENT_GLOBAL(QQEnums::loadstorage, QJsonDocument(sendData).toJson());
 }
 
 QQFriend::~QQFriend()
@@ -248,6 +230,18 @@ QQFriend::~QQFriend()
 	delete m_proxyStyle;
 	delete ui;
 }
+
+bool QQFriend::event(QEvent *event)
+{
+	switch (event->type())
+	{
+		QQ_HANDLE_EVENT_THIS(QQEnums::loadstorage, handleStorge);
+	default:
+		break;
+	}
+	return QWidget::event(event);
+}
+
 // 过滤事件--用于处理鼠标点击,重置输入框焦点
 bool QQFriend::eventFilter(QObject *watch, QEvent *event)
 {
@@ -269,32 +263,82 @@ bool QQFriend::eventFilter(QObject *watch, QEvent *event)
 	return QWidget::eventFilter(watch, event);
 }
 
-void QQFriend::loadPeopleInModelItem(QStandardItem *item, QQConfigs::FriendConfig *user)
+void QQFriend::loadPeopleInModelItem(QStandardItem *item, const QVariantMap &data)
 {
-	item->setData(QVariant::fromValue(user), Qt::UserRole);
-	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(user->m_icon)));
+	item->setData(data["ID"].toString(), Qt::UserRole);
+	item->setData(data["type"].toInt(), Qt::UserRole + 1);
+	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(data["icon"].toString()));
 	icon = QQFunctions::getRoundedPixmap(icon.scaled(QQGlobals::g_theme->m_friend_index_icon_size), QQGlobals::g_theme->m_friend_index_icon_size.width() / 2);
-	item->setData(icon, Qt::UserRole + 1);
-	QString name = QString::fromLocal8Bit(user->m_name.c_str()) + QString("(%1)").arg(user->m_nickname);
+	item->setData(icon, Qt::UserRole + 2);
+	QString name = data["name"].toString() + QString("(%1)").arg(data["nickname"].toString());
 	name = QQFunctions::getCalculateText(name, QQGlobals::g_theme->m_friend_index_name_font);
-	item->setData(name, Qt::UserRole + 2);
-	QString sign = QString::fromLocal8Bit(user->m_sign.c_str());
+	item->setData(name, Qt::UserRole + 3);
+	QString sign = data["sign"].toString();
 	sign = QQFunctions::getCalculateText(sign, QQGlobals::g_theme->m_friend_index_sign_font);
-	item->setData(sign, Qt::UserRole + 3);
+	item->setData(sign, Qt::UserRole + 4);
 }
 
-void QQFriend::loadPeopleInModelItem(QStandardItem *item, QQConfigs::GroupConfig *group)
+void QQFriend::handleStorge(const QByteArray &data)
 {
-	item->setData(QVariant::fromValue(group), Qt::UserRole);
-	QPixmap icon = QPixmap::fromImage(QQFunctions::getBase64ToImage(QString::fromStdString(group->m_icon)));
-	icon = QQFunctions::getRoundedPixmap(icon.scaled(QQGlobals::g_theme->m_friend_index_icon_size), QQGlobals::g_theme->m_friend_index_icon_size.width() / 2);
-	item->setData(icon, Qt::UserRole + 1);
-	QString name = QString::fromLocal8Bit(group->m_name.c_str()) + QString("(%1)").arg(group->m_nickname);
-	name = QQFunctions::getCalculateText(name, QQGlobals::g_theme->m_friend_index_name_font);
-	item->setData(name, Qt::UserRole + 2);
-	QString account = QString::fromLocal8Bit(group->m_account.c_str());
-	account = QQFunctions::getCalculateText(account, QQGlobals::g_theme->m_friend_index_sign_font);
-	item->setData(account, Qt::UserRole + 3);
+	QJsonObject receiveData = QJsonDocument::fromJson(data).object();
+	if (receiveData["action"].toString() == "receiveindex")
+	{
+		QJsonObject realData = receiveData["data"].toObject();
+		QJsonArray friends = realData["friends"].toArray();
+		m_friendsListModel->insertRows(0, friends.size());
+		for (int i = 0; i < friends.size(); i++)
+		{
+			QJsonObject realData = friends[i].toObject();
+			QStandardItem *item = new QStandardItem;
+			QVariantMap map;
+			map["ID"] = realData["ID"].toString();
+			map["type"] = 0;
+			map["icon"] = realData["icon"].toString();
+			if (!realData["nickname"].toString().isEmpty())
+			{
+				map["name"] = realData["name"].toString() + QString("(%1)").arg(realData["nickname"].toString());
+			}
+			else
+			{
+				map["name"] = realData["name"].toString();
+			}
+			map["sign"] = realData["sign"].toString();
+			loadPeopleInModelItem(item, map);
+			m_friendsListModel->setItem(i, item);
+		}
+		QJsonArray groups = realData["groups"].toArray();
+		m_groupsListModel->insertRows(0, groups.size());
+		for (int i = 0; i < groups.size(); i++)
+		{
+			QJsonObject realData = groups[i].toObject();
+			QStandardItem *item = new QStandardItem;
+			QVariantMap map;
+			map["ID"] = realData["ID"].toString();
+			map["type"] = 1;
+			map["icon"] = realData["icon"].toString();
+			if (!realData["nickname"].toString().isEmpty())
+			{
+				map["name"] = realData["name"].toString() + QString("(%1)").arg(realData["nickname"].toString());
+			}
+			else
+			{
+				map["name"] = realData["name"].toString();
+			}
+			map["sign"] = realData["sign"].toString();
+			loadPeopleInModelItem(item, map);
+			m_groupsListModel->setItem(i, item);
+		}
+	}
+	else if (receiveData["action"].toString() == "receiveinfo")
+	{
+		QJsonObject sendData;
+		sendData.insert("version", *(QQGlobals::g_version));
+		sendData.insert("sender", "friend");
+		sendData.insert("receiver", "chat");
+		sendData.insert("action", "addchat");
+		sendData.insert("data", receiveData["data"].toObject());
+		QQ_SEND_EVENT_GLOBAL(QQEnums::requestmoudel, QJsonDocument(sendData).toJson());
+	}
 }
 
 void QQFriend::do_userClickSearchMore()
@@ -349,7 +393,6 @@ void QQFriend::do_userClickRightContextMenuAction(QAction *action)
 				item->setIcon(ElaIcon::getInstance()->getElaIcon(ElaIconType::AngleRight, 32, Qt::black));
 				m_friendsListModel->appendRow(item);
 				m_friendsGroups.insert(text, m_friendsListModel->indexFromItem(item));
-				// m_friendsGroupComboBox->addItem(text);
 			}
 			else
 			{
@@ -388,7 +431,6 @@ void QQFriend::do_userClickRightContextMenuAction(QAction *action)
 				topItem->appendRow(childItem);
 			}
 			m_friendsGroups.remove(index.data(Qt::DisplayRole).toString());
-			// m_friendsGroupComboBox->removeItem(index.row());
 			m_friendsListModel->removeRow(index.row());
 		};
 		messageDialog->setFunction(function);
@@ -538,25 +580,15 @@ void QQFriend::do_userClickMusicConnect()
 
 void QQFriend::do_userClickSendMessage()
 {
+	// 先获取好友的信息，然后发送给chat模块
 	QJsonObject sendData;
-	sendData.insert("version", "1.0");
+	sendData.insert("version", *(QQGlobals::g_version));
 	sendData.insert("sender", "friend");
-	sendData.insert("action", "requestchat");
+	sendData.insert("receiver", "storage");
+	sendData.insert("action", "searchinfo");
 	QJsonObject data;
-	if (sender() == ui->friendSendMsgBtn)
-	{
-		QModelIndex index = ui->friendTree->currentIndex();
-		QQConfigs::FriendConfig *user = qvariant_cast<QQConfigs::FriendConfig *>(index.data(Qt::UserRole));
-		data.insert("type", "friend");
-		data.insert("chatId", QString::fromStdString(user->m_ID));
-	}
-	else if (sender() == ui->groupSendMsgBtn)
-	{
-		QModelIndex index = ui->friendTree->currentIndex();
-		QQConfigs::GroupConfig *group = qvariant_cast<QQConfigs::GroupConfig *>(index.data(Qt::UserRole));
-		data.insert("type", "group");
-		data.insert("chatId", QString::fromStdString(group->m_ID));
-	}
+	data.insert("ID", ui->friendTree->currentIndex().data(Qt::UserRole).toString());
+	data.insert("type", ui->friendTree->currentIndex().data(Qt::UserRole + 1).toInt());
 	sendData.insert("data", data);
-	QQ_SEND_EVENT(QQEnums::requestchat, QJsonDocument(sendData).toJson());
+	QQ_SEND_EVENT_GLOBAL(QQEnums::requestmoudel, QJsonDocument(sendData).toJson());
 }

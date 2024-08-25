@@ -46,7 +46,7 @@ bool QQAudio::event(QEvent *event)
 {
 	switch (event->type())
 	{
-		QQ_HANDLE_EVENT_THIS(QQEnums::sendaudio, QQAudio::respondRequest);
+		QQ_HANDLE_EVENT_THIS(QQEnums::requestmoudel, QQAudio::handleChat);
 	default:
 		return QWidget::event(event);
 	}
@@ -81,7 +81,7 @@ void QQAudio::keyReleaseEvent(QKeyEvent *event)
 			std::fill(m_showData.begin(), m_showData.end(), 0);
 			this->update();
 			QByteArray amrData = getAuioPCMToAMR(m_audioData);
-			uint64_t duration = calculateAMRDuration(amrData);
+			int duration = calculateAMRDuration(amrData);
 			if (duration < QQGlobals::AUDIO_MIN_TIME || duration > QQGlobals::AUDIO_MAX_TIME)
 			{
 				ElaMessageBar::warning(ElaMessageBarType::Bottom, QString(), QString::fromLocal8Bit("语音时长超过限制"), 3000);
@@ -89,15 +89,21 @@ void QQAudio::keyReleaseEvent(QKeyEvent *event)
 			else if (!amrData.isEmpty())
 			{
 				QJsonObject sendData;
-				sendData.insert("version", "1.0");
+				sendData.insert("version", *(QQGlobals::g_version));
 				sendData.insert("sender", "audio");
+				sendData.insert("receiver", "network");
 				sendData.insert("action", "sendaudio");
 				QJsonObject data;
-				data.insert("type", "amr");
-				data.insert("senderID", m_senderID);
-				data.insert("receiverID", m_receiverID);
+				data.insert("type", "audio");
+				data.insert("sender", m_sender);
+				data.insert("receiver", m_receiver);
 				data.insert("content", QString(amrData));
-				QQ_SEND_EVENT(QQEnums::sendaudio, QJsonDocument(data).toJson());
+				data.insert("duration", duration);
+				data.insert("time", QDateTime::currentDateTime().toSecsSinceEpoch());
+				sendData.insert("data", data);
+				QQ_SEND_EVENT_GLOBAL(QQEnums::sendmessage, QJsonDocument(data).toJson());
+				sendData.insert("receiver", "chat");
+				QQ_SEND_EVENT_GLOBAL(QQEnums::requestmoudel, QJsonDocument(sendData).toJson());
 			}
 			m_audioData.clear();
 		}
@@ -165,14 +171,6 @@ void QQAudio::paintEvent(QPaintEvent *event)
 		rect.moveTopLeft(QPoint(this->width() / 2 - rect.width() / 2, this->height() / 2 + radius + 10));
 		painter.drawText(rect, Qt::AlignCenter, text);
 	}
-}
-
-void QQAudio::respondRequest(const QByteArray &data)
-{
-	QJsonObject receiveData = QJsonDocument::fromJson(data).object();
-	QJsonObject content = receiveData.value("data").toObject();
-	m_senderID = content.value("senderID").toString();
-	m_receiverID = content.value("receiverID").toString();
 }
 
 void QQAudio::respondClose()
@@ -456,6 +454,14 @@ QAudioFormat QQAudio::nearestFormat(const QAudioDevice &device, const QAudioForm
 	return nearestFormat;
 }
 #endif
+
+void QQAudio::handleChat(const QByteArray &data)
+{
+	QJsonObject receiveData = QJsonDocument::fromJson(data).object();
+	QJsonObject realData = receiveData.value("data").toObject();
+	m_sender = realData.value("sender").toString();
+	m_receiver = realData.value("receiver").toString();
+}
 
 void QQAudio::do_audioBufferReady()
 {

@@ -118,6 +118,12 @@ private:
 	 */
 	void handleFriend(const QByteArray &data);
 
+	/**
+	 * @brief 处理来自音频模块的消息
+	 * @param data
+	 */
+	void handleAudio(const QByteArray &data);
+
 private slots:
 	void do_userClickSearchMore();
 	void do_userClickSearchMoreAction(QAction *action);

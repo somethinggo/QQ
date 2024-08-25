@@ -48,7 +48,8 @@ private:
 	void appendEmojiByUnicode(char32_t *start, int len, char32_t end);
 	void insertData(int index, QStandardItem *item);
 	void initEmojiView();
-	void loadEmojiData(const QByteArray &data);
+
+	void handleStorage(const QByteArray &data);
 
 protected:
 	bool event(QEvent *event) override;

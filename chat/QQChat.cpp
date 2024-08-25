@@ -195,6 +195,10 @@ bool QQChat::event(QEvent *event)
 		{
 			this->handleEmoji(static_cast<QQEnums::requestmoudel *>(event)->data);
 		}
+		else if (receiveData["receiver"].toString() == QString("audio"))
+		{
+			this->handleAudio(static_cast<QQEnums::requestmoudel *>(event)->data);
+		}
 	};
 	}
 	return QWidget::event(event);
@@ -282,7 +286,7 @@ void QQChat::sendMessageToNetWork(const QVariantMap &message)
 	data.insert("sender", message["sender"].toString());
 	data.insert("receiver", message["receiver"].toString());
 	data.insert("content", message["content"].toString());
-	data.insert("time", message["time"].toString());
+	data.insert("time", message["time"].toInt());
 	sendData.insert("data", data);
 	QQ_SEND_EVENT_GLOBAL(QQEnums::sendmessage, QJsonDocument(sendData).toJson());
 	sendData.insert("receiver", "storage");
@@ -544,6 +548,7 @@ void QQChat::handleNetwork(const QByteArray &data)
 		map.insert("sended", true);
 		loadMessageInModelItem(item, map);
 		m_messageListModel->appendRow(item);
+		// 更新本地存储
 		QJsonObject sendData;
 		sendData.insert("version", *(QQGlobals::g_version));
 		sendData.insert("sender", "chat");
@@ -559,32 +564,34 @@ void QQChat::handleNetwork(const QByteArray &data)
 		QString sender = realData["sender"].toString();
 		QString receiver = realData["receiver"].toString();
 		QString time = realData["time"].toString();
-		QString currentChatID = ui->indexList->currentIndex().data(Qt::UserRole).toString();
-		if (sender == currentChatID)
+		QString currentID = ui->indexList->currentIndex().data(Qt::UserRole).toString();
+		if (sender == currentID)
 		{
-			// todo-向本地存储查询消息的位置
-			int index = 0;
-			QStandardItem *item = m_messageListModel->item(index);
-			item->setData(realData["sending"].toBool(), Qt::UserRole + 5);
-			item->setData(realData["sended"].toBool(), Qt::UserRole + 6);
-			if (realData["delete"].toBool())
+			// 查询消息的位置
+			QString ID = realData["ID"].toString();
+			for (int i = 0; i < m_messageListModel->rowCount(); ++i)
 			{
-				m_messageListModel->removeRow(index);
-				QStandardItem *item = new QStandardItem;
-				QVariantMap map;
-				QVariantList list;
-				list << sender << receiver << time;
-				map.insert("ID", QQFunctions::getUniqueHashID(list));
-				map.insert("sender", static_cast<int>(QQConfigs::MessageConfig::SenderType::system));
-				map.insert("type", static_cast<int>(QQConfigs::MessageConfig::MessageType::text));
-				map.insert("content", "对方撤回了一条消息");
-				map.insert("time", time);
-				map.insert("sending", false);
-				map.insert("sended", true);
-				loadMessageInModelItem(item, map);
-				m_messageListModel->appendRow(item);
-
-				// todo-向本地存储更新消息
+				if (m_messageListModel->item(i)->data(Qt::UserRole).toString() == ID)
+				{
+					QStandardItem *item = m_messageListModel->item(i);
+					item->setData(realData["sending"].toBool(), Qt::UserRole + 5);
+					item->setData(realData["sended"].toBool(), Qt::UserRole + 6);
+					if (realData["delete"].toBool())
+					{
+						QVariantMap map;
+						QVariantList list;
+						list << sender << receiver << time;
+						map.insert("ID", QQFunctions::getUniqueHashID(list));
+						map.insert("sender", static_cast<int>(QQConfigs::MessageConfig::SenderType::system));
+						map.insert("type", static_cast<int>(QQConfigs::MessageConfig::MessageType::text));
+						map.insert("content", "对方撤回了一条消息");
+						map.insert("time", time);
+						map.insert("sending", false);
+						map.insert("sended", true);
+						loadMessageInModelItem(item, map);
+					}
+					break;
+				}
 			}
 		}
 
@@ -601,7 +608,7 @@ void QQChat::handleNetwork(const QByteArray &data)
 void QQChat::handleStorage(const QByteArray &data)
 {
 	QJsonObject receiveData = QJsonDocument::fromJson(data).object();
-	if (receiveData["action"].toString() == QString("loadindex"))
+	if (receiveData["action"].toString() == QString("receiveindex"))
 	{
 		QJsonObject realData = receiveData["data"].toObject();
 		QJsonArray indexList = realData["indexs"].toArray();
@@ -637,7 +644,7 @@ void QQChat::handleStorage(const QByteArray &data)
 			m_indexListModel->setItem(i, item);
 		}
 	}
-	else if (receiveData["action"].toString() == QString("loadsmessage"))
+	else if (receiveData["action"].toString() == QString("receivemessage"))
 	{
 		QJsonObject realData = receiveData["data"].toObject();
 		QJsonArray messageList = realData["messages"].toArray();
@@ -690,7 +697,7 @@ void QQChat::handleEmoji(const QByteArray &data)
 void QQChat::handleFriend(const QByteArray &data)
 {
 	QJsonObject receiveData = QJsonDocument::fromJson(data).object();
-	if (receiveData["action"].toString() == QString("addfriend"))
+	if (receiveData["action"].toString() == QString("addchat"))
 	{
 		QStandardItem *item = new QStandardItem;
 		QVariantMap map;
@@ -715,6 +722,29 @@ void QQChat::handleFriend(const QByteArray &data)
 				break;
 			}
 		}
+	}
+}
+
+void QQChat::handleAudio(const QByteArray &data)
+{
+	QJsonObject receiveData = QJsonDocument::fromJson(data).object();
+	if (receiveData["action"].toString() == QString("sendaudio"))
+	{
+		QStandardItem *item = new QStandardItem;
+		QVariantMap map;
+		QVariantList list;
+		QString sender = receiveData["data"].toObject()["sender"].toString();
+		QString receiver = receiveData["data"].toObject()["receiver"].toString();
+		qint64 time = receiveData["data"].toObject()["time"].toInt();
+		list << sender << receiver << time;
+		map.insert("ID", QQFunctions::getUniqueHashID(list));
+		map.insert("sender", static_cast<int>(QQConfigs::MessageConfig::SenderType::me));
+		map.insert("type", static_cast<int>(QQConfigs::MessageConfig::MessageType::audio));
+		map.insert("content", receiveData["data"].toObject()["content"].toString());
+		map.insert("sending", true);
+		map.insert("sended", false);
+		loadMessageInModelItem(item, map);
+		m_messageListModel->appendRow(item);
 	}
 }
 
@@ -1013,9 +1043,9 @@ void QQChat::do_userClickSendAudio()
 	sendData.insert("reciver", "audio");
 	sendData.insert("action", "sendaudio");
 	QJsonObject data;
-	data.insert("senderID", QString::fromStdString(QQGlobals::g_user->m_ID));
+	data.insert("sender", QString::fromStdString(QQGlobals::g_user->m_ID));
 	QModelIndex index = ui->indexList->currentIndex();
-	data.insert("receiverID", index.data(Qt::UserRole).toString());
+	data.insert("receiver", index.data(Qt::UserRole).toString());
 	sendData.insert("data", data);
 	QQ_SEND_EVENT_GLOBAL(QQEnums::requestmoudel, QJsonDocument(sendData).toJson());
 }
